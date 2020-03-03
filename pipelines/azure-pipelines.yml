@@ -44,7 +44,7 @@ steps:
     inputs:
       command: publish
       publishWebProjects: false
-      projects: 'src/Dfe.Spi.IStore.FunctionApp/Dfe.Spi.IStore.FunctionApp.csproj'
+      projects: 'src/Dfe.Spi.IStoreAdapter.FunctionApp/Dfe.Spi.IStoreAdapter.FunctionApp.csproj'
       arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish --no-restore --no-build'
 
   - task: CopyFiles@2

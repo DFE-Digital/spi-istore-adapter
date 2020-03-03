@@ -1,0 +1,69 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - "*"
+
+workspace:
+  clean: all
+
+variables:
+  BuildConfiguration: 'Release'
+  BuildPlatform: 'Any CPU'
+
+steps:
+  - task: NuGetToolInstaller@1
+    displayName: 'Use NuGet 4.9.1'
+    inputs:
+      versionSpec: '4.9.1'
+
+  - task: NuGetCommand@2
+    displayName: 'Restore Public & Private NuGet Packages'
+    inputs:
+      command: 'restore'
+      restoreSolution: '**/*.sln'
+      feedsToUse: 'select'
+      vstsFeed: 'c5095ddb-6433-4990-a3a5-1df8a78b1302/$(FeedSecret)'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build Everything'
+    inputs:
+      command: 'build'
+      projects: 'src/**/*.csproj'
+      arguments: '--configuration $(BuildConfiguration) --no-restore'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Run Unit Tests'
+    inputs:
+      command: test
+      projects: 'src/**/*.UnitTests.csproj'
+      arguments: '--configuration $(BuildConfiguration) --no-restore'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish iStore Adapter'
+    inputs:
+      command: publish
+      publishWebProjects: false
+      projects: 'src/Dfe.Spi.IStore.FunctionApp/Dfe.Spi.IStore.FunctionApp.csproj'
+      arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish --no-restore --no-build'
+
+  - task: CopyFiles@2
+    displayName: 'Copy ARM template'
+    inputs:
+      Contents: |
+        azure/*
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/publish'
+      OverWrite: true
+
+  - task: CopyFiles@2
+    displayName: 'Copy EAPIM files'
+    inputs:
+      Contents: |
+        eapim/*
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/publish'
+      OverWrite: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish All Artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'

@@ -1,0 +1,57 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "iStore Adapter API",
+    "version": "2.0",
+    "description": "SPI middleware component: acts as an adapter to the iStore databases."
+  },
+  "basePath": "/api",
+  "host": "__function_app_host__",
+  "paths": {
+    "/HeartBeat": {
+      "get": {
+        "description": "Standard diagnostics method, used to test the health of the facade's underlying system.",
+        "operationId": "heart-beat",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "description": "Bearer token authentication.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The standard/only response from the method."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "http-error-body": {
+      "type": "object",
+      "properties": {
+        "errorIdentifier": {
+          "type": "string",
+          "description": "An error identifier.",
+          "example": "SPI-ISA-2"
+        },
+        "message": {
+          "type": "string",
+          "description": "A message describing the error.",
+          "example": "Unable to serve any requests - all adapters are unavailable."
+        },
+        "statusCode": {
+          "type": "integer",
+          "description": "The status code thrown with the error.",
+          "example": 424
+        }
+      }
+    },
+    "get-squashed-entity-response": {
+      "type": "object"
+    }
+  }
+}

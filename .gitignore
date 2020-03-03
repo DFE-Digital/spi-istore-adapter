@@ -265,3 +265,6 @@ local.settings.json
 
 # XML Docs
 Dfe.Spi.IStoreAdapter.*.xml
+
+# MacOS
+.DS_Store

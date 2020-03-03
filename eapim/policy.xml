@@ -1,0 +1,25 @@
+<policies>
+  
+  <inbound>
+    
+    <base />
+    
+    <set-header name="X-Functions-Key" exists-action="skip">
+      <value>{{istore-function-app-key}}</value>
+    </set-header>
+    
+  </inbound>
+  
+  <backend>
+    <base />
+  </backend>
+  
+  <outbound>
+    <base />
+  </outbound>
+  
+  <on-error>
+    <base />
+  </on-error>
+  
+</policies>

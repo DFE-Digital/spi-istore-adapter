@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <DocumentationFile>Dfe.Spi.IStoreAdapter.Application.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Development/Non-Runtime -->
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dfe.Spi.IStoreAdapter.Domain\Dfe.Spi.IStoreAdapter.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>..\ca.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+</Project>

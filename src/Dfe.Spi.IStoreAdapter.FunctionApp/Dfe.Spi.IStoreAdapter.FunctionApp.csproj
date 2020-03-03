@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+    <DocumentationFile>Dfe.Spi.IStoreAdapter.FunctionApp.xml</DocumentationFile>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Remove="Schemas\census-body.json" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <!-- Dfe.Spi.* -->
+    <PackageReference Include="Dfe.Spi.Common.Http.Server" Version="1.0.14" />
+
+    <!-- Microsoft -->
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.29" />
+
+    <!-- Development/Non-Runtime -->
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\stylecop.json" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>..\ca.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\census-body.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dfe.Spi.IStoreAdapter.Application\Dfe.Spi.IStoreAdapter.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="HttpErrorMessages.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>HttpErrorMessages.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="HttpErrorMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>HttpErrorMessages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  
+</Project>

@@ -1,3 +1,56 @@
 {
-  "type": "object"
+  "type": "object",
+  "properties": {
+    "aggregateQueries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "dataFilters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "operator": {
+                  "type": "string",
+
+                  // NOTE: Needs to be kept in-line with
+                  // https://github.com/DFE-Digital/spi-common/blob/master/src/Dfe.Spi.Common/Dfe.Spi.Common.Models/DataOperator.cs
+                  //
+                  "enum": [
+                    "Equals",
+                    "Contains",
+                    "GreaterThan",
+                    "GreaterThanOrEqualTo",
+                    "LessThan",
+                    "LessThanOrEqualTo",
+                    "In",
+                    "IsNull",
+                    "IsNotNull",
+                    "Between"
+                  ]
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "operator"
+              ]
+            }
+          }
+        },
+        "required": [
+          "dataFilters"
+        ]
+      }
+    }
+  },
+  "required": [
+    "aggregateQueries"
+  ]
 }

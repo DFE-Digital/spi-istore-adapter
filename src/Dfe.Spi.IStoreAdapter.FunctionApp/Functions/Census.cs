@@ -99,7 +99,8 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             HttpErrorBodyResult toReturn =
                 this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
                     HttpStatusCode.BadRequest,
-                    2);
+                    2,
+                    message);
 
             return toReturn;
         }

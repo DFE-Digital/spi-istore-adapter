@@ -8,7 +8,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <None Remove="Schemas\census-body.json" />
+    <None Remove="Schemas\censuses-body.json" />
   </ItemGroup>
   
   <ItemGroup>
@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Schemas\census-body.json" />
+    <EmbeddedResource Include="Schemas\censuses-body.json" />
   </ItemGroup>
 
   <ItemGroup>

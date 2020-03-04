@@ -8,10 +8,10 @@
   "basePath": "/api",
   "host": "__function_app_host__",
   "paths": {
-    "/census/{id}": {
+    "/censuses/{id}": {
       "post": {
         "description": "Returns a single census, based on its id.",
-        "operationId": "census",
+        "operationId": "censuses",
         "parameters": [
           {
             "in": "body",

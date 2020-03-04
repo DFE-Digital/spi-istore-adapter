@@ -1,6 +1,7 @@
 namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net;
     using System.Threading;
@@ -10,6 +11,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
+    using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -24,6 +26,8 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
+
+        private string id;
 
         /// <summary>
         /// Initialises a new instance of the <see cref="Censuses" /> class.
@@ -68,15 +72,40 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// </returns>
         [FunctionName("censuses")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "POST", Route = "censuses/{id}")]
+            [HttpTrigger(AuthorizationLevel.Function, "GET", "POST", Route = "censuses/{id}")]
             HttpRequest httpRequest,
             string id,
             CancellationToken cancellationToken)
         {
-            IActionResult toReturn = await this.ValidateAndRunAsync(
-                httpRequest,
-                cancellationToken)
-                .ConfigureAwait(false);
+            IActionResult toReturn = null;
+
+            if (httpRequest == null)
+            {
+                throw new ArgumentNullException(nameof(httpRequest));
+            }
+
+            this.id = id;
+
+            switch (httpRequest.Method)
+            {
+                case "POST":
+
+                    toReturn = await this.ValidateAndRunAsync(
+                        httpRequest,
+                        cancellationToken)
+                        .ConfigureAwait(false);
+
+                    break;
+
+                case "GET":
+
+                    toReturn = await this.ProcessWellFormedRequestAsync(
+                        null,
+                        cancellationToken)
+                        .ConfigureAwait(false);
+
+                    break;
+            }
 
             return toReturn;
         }
@@ -112,11 +141,6 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         {
             IActionResult toReturn = null;
 
-            if (getCensusRequest == null)
-            {
-                throw new ArgumentNullException(nameof(getCensusRequest));
-            }
-
             try
             {
                 // TODO: Wire up to processor response.
@@ -132,18 +156,22 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             }
 
             // TODO: Temporary stubbing - to be removed.
-            Aggregation[] aggregations = getCensusRequest
-                .AggregateQueries
-                .Select(x => new Aggregation()
-                {
-                    Name = x.Key,
-                    Value = x.Key.GetHashCode(StringComparison.InvariantCulture),
-                })
-                .ToArray();
+            Aggregation[] aggregations = null;
+            if (getCensusRequest != null)
+            {
+                aggregations = getCensusRequest
+                    .AggregateQueries
+                    .Select(x => new Aggregation()
+                    {
+                        Name = x.Key,
+                        Value = x.Key.GetHashCode(StringComparison.InvariantCulture),
+                    })
+                    .ToArray();
+            }
 
             Models.Entities.Census census = new Models.Entities.Census()
             {
-                Name = "Requested Census",
+                Name = $"Requested Census: Id {this.id}",
                 _Aggregations = aggregations,
             };
 

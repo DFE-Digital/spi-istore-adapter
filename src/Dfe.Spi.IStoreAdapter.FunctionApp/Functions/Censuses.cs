@@ -18,15 +18,15 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Newtonsoft.Json;
 
     /// <summary>
-    /// Entry class for the <c>census</c> function.
+    /// Entry class for the <c>censuses</c> function.
     /// </summary>
-    public class Census : FunctionsBase<GetCensusRequest>
+    public class Censuses : FunctionsBase<GetCensusRequest>
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
 
         /// <summary>
-        /// Initialises a new instance of the <see cref="Census" /> class.
+        /// Initialises a new instance of the <see cref="Censuses" /> class.
         /// </summary>
         /// <param name="censusProcessor">
         /// An instance of type <see cref="ICensusProcessor" />.
@@ -40,7 +40,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <param name="loggerWrapper">
         /// An instance of type <see cref="ILoggerWrapper" />.
         /// </param>
-        public Census(
+        public Censuses(
             ICensusProcessor censusProcessor,
             IHttpErrorBodyResultProvider httpErrorBodyResultProvider,
             IHttpSpiExecutionContextManager httpSpiExecutionContextManager,
@@ -52,7 +52,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         }
 
         /// <summary>
-        /// Entry method for the <c>census</c> function.
+        /// Entry method for the <c>censuses</c> function.
         /// </summary>
         /// <param name="httpRequest">
         /// An instance of <see cref="HttpContext" />.
@@ -66,9 +66,9 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <returns>
         /// An instance of type <see cref="IActionResult" />.
         /// </returns>
-        [FunctionName("census")]
+        [FunctionName("censuses")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "POST", Route = "census/{id}")]
+            [HttpTrigger(AuthorizationLevel.Function, "POST", Route = "censuses/{id}")]
             HttpRequest httpRequest,
             string id,
             CancellationToken cancellationToken)

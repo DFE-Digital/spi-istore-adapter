@@ -1,5 +1,7 @@
 namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 {
+    using System;
+    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
@@ -8,10 +10,12 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
+    using Dfe.Spi.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.Http;
+    using Newtonsoft.Json;
 
     /// <summary>
     /// Entry class for the <c>census</c> function.
@@ -53,6 +57,9 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <param name="httpRequest">
         /// An instance of <see cref="HttpContext" />.
         /// </param>
+        /// <param name="id">
+        /// The id of the requested census.
+        /// </param>
         /// <param name="cancellationToken">
         /// An instance of <see cref="CancellationToken" />.
         /// </param>
@@ -61,8 +68,9 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// </returns>
         [FunctionName("census")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "POST", Route = null)]
+            [HttpTrigger(AuthorizationLevel.Function, "POST", Route = "census/{id}")]
             HttpRequest httpRequest,
+            string id,
             CancellationToken cancellationToken)
         {
             IActionResult toReturn = await this.ValidateAndRunAsync(
@@ -103,14 +111,52 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         {
             IActionResult toReturn = null;
 
-            GetCensusResponse getCensusResponse =
-                await this.censusProcessor.GetCensusAsync(
-                    getCensusRequest,
-                    cancellationToken)
-                    .ConfigureAwait(false);
+            if (getCensusRequest == null)
+            {
+                throw new ArgumentNullException(nameof(getCensusRequest));
+            }
 
-            // TODO: Wire up to processor response.
-            toReturn = new OkResult();
+            try
+            {
+                // TODO: Wire up to processor response.
+                GetCensusResponse getCensusResponse =
+                    await this.censusProcessor.GetCensusAsync(
+                        getCensusRequest,
+                        cancellationToken)
+                        .ConfigureAwait(false);
+            }
+            catch (NotImplementedException)
+            {
+                // Nothing, just want to return.
+            }
+
+            // TODO: Temporary stubbing - to be removed.
+            Aggregation[] aggregations = getCensusRequest
+                .AggregateQueries
+                .Select(x => new Aggregation()
+                {
+                    Name = x.Key,
+                    Value = x.Key.GetHashCode(StringComparison.InvariantCulture),
+                })
+                .ToArray();
+
+            Models.Entities.Census census = new Models.Entities.Census()
+            {
+                Name = "Requested Census",
+                _Aggregations = aggregations,
+            };
+
+            JsonSerializerSettings jsonSerializerSettings =
+                JsonConvert.DefaultSettings();
+
+            if (jsonSerializerSettings == null)
+            {
+                toReturn = new JsonResult(census);
+            }
+            else
+            {
+                toReturn = new JsonResult(census, jsonSerializerSettings);
+            }
 
             return toReturn;
         }

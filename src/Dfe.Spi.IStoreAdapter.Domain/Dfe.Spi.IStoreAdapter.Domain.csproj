@@ -8,8 +8,8 @@
   <ItemGroup>
     <!-- Dfe.Spi.* -->
     <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.1.1" />
-    <PackageReference Include="Dfe.Spi.Common.Models" Version="1.0.3" />
-    <PackageReference Include="Dfe.Spi.Models" Version="1.0.16" />
+    <PackageReference Include="Dfe.Spi.Common.Models" Version="1.0.4" />
+    <PackageReference Include="Dfe.Spi.Models" Version="1.1.0" />
 
     <!-- Other -->
     <PackageReference Include="Meridian.MeaningfulToString" Version="1.0.4" />

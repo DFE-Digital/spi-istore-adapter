@@ -11,7 +11,7 @@
     "/census/{id}": {
       "post": {
         "description": "Returns a single census, based on its id.",
-        "operationId": "get-census",
+        "operationId": "census",
         "parameters": [
           {
             "in": "body",

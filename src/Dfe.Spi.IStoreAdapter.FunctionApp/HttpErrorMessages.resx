@@ -123,4 +123,10 @@
   <data name="_2" xml:space="preserve">
     <value>The supplied body was well-formed JSON but it failed validation: {0}</value>
   </data>
+  <data name="_3" xml:space="preserve">
+    <value>Could not parse the requested id into a CensusIdentifier. The CensusIdentifier must follow the format: "&lt;DatasetQueryFileId&gt;-&lt;ParameterName&gt;-&lt;ParameterValue&gt;".</value>
+  </data>
+  <data name="_4" xml:space="preserve">
+    <value>Could not find dataset query file with identifier "{0}".</value>
+  </data>
 </root>

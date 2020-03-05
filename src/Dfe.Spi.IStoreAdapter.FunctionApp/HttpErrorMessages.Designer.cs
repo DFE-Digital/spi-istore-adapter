@@ -77,5 +77,23 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
                 return ResourceManager.GetString("_2", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not parse the requested id into a CensusIdentifier. The CensusIdentifier must follow the format: &quot;&lt;DatasetQueryFileId&gt;-&lt;ParameterName&gt;-&lt;ParameterValue&gt;&quot;..
+        /// </summary>
+        internal static string _3 {
+            get {
+                return ResourceManager.GetString("_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find dataset query file with identifier &quot;{0}&quot;..
+        /// </summary>
+        internal static string _4 {
+            get {
+                return ResourceManager.GetString("_4", resourceCulture);
+            }
+        }
     }
 }

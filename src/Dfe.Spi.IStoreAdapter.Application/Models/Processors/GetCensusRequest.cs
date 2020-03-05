@@ -14,6 +14,16 @@
     public class GetCensusRequest : RequestResponseBase
     {
         /// <summary>
+        /// Gets or sets an instance of
+        /// <see cref="Processors.CensusIdentifier" />.
+        /// </summary>
+        public CensusIdentifier CensusIdentifier
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the aggregate queries.
         /// </summary>
         [SuppressMessage(

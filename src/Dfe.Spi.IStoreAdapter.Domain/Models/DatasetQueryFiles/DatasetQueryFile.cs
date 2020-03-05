@@ -8,9 +8,9 @@
     {
         /// <summary>
         /// Gets or sets an instance of
-        /// <see cref="DatasetQueryFiles.Configuration" />.
+        /// <see cref="DatasetQueryFiles.QueryConfiguration" />.
         /// </summary>
-        public Configuration Configuration
+        public QueryConfiguration QueryConfiguration
         {
             get;
             set;

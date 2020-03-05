@@ -14,9 +14,15 @@
         /// <summary>
         /// Gets an individual <see cref="DatasetQueryFile" />.
         /// </summary>
-        /// <exception cref="FileNotFoundException">
+        /// <exception cref="DatasetQueryFileNotFoundException">
         /// Thrown when the specified <paramref name="datasetQueryFileId" />
         /// does not exist.
+        /// </exception>
+        /// <exception cref="IncompleteDatasetQueryFileException">
+        /// Although the specified <paramref name="datasetQueryFileId" />
+        /// existed as a blob storage directly, a file, used in the
+        /// construction of the returned <see cref="DatasetQueryFile" /> was
+        /// missing.
         /// </exception>
         /// <param name="datasetQueryFileId">
         /// The id of the <see cref="DatasetQueryFile" /> to return.

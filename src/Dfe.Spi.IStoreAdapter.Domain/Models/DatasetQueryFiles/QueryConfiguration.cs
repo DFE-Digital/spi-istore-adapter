@@ -4,7 +4,7 @@
     /// Represents the configuration aspect of a
     /// <see cref="DatasetQueryFile" />.
     /// </summary>
-    public class Configuration : ModelsBase
+    public class QueryConfiguration : ModelsBase
     {
         /// <summary>
         /// Gets or sets the environment variable, holding a SQL connection

@@ -8,11 +8,13 @@
     using System.Threading.Tasks;
     using Dfe.Spi.Common.AzureStorage;
     using Dfe.Spi.Common.Logging.Definitions;
+    using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Blob;
+    using Newtonsoft.Json;
 
     /// <summary>
     /// Implements <see cref="IDatasetQueryFilesStorageAdapter" />.
@@ -26,6 +28,7 @@
         private readonly string datasetQueryFileStorageContainerName;
         private readonly string datasetQueryFileConfigFilename;
         private readonly string datasetQueryFileQueryFilename;
+        private readonly OperationContext operationContext;
 
         /// <summary>
         /// Initialises a new instance of the
@@ -64,6 +67,8 @@
                 datasetQueryFilesStorageAdapterSettingsProvider.DatasetQueryFileConfigFilename;
             this.datasetQueryFileQueryFilename =
                 datasetQueryFilesStorageAdapterSettingsProvider.DatasetQueryFileQueryFilename;
+
+            this.operationContext = new OperationContext();
         }
 
         /// <inheritdoc />
@@ -72,6 +77,115 @@
             CancellationToken cancellationToken)
         {
             DatasetQueryFile toReturn = null;
+
+            CloudBlobDirectory cloudBlobDirectory =
+                await this.GetDatasetQueryFileDirectory(datasetQueryFileId)
+                .ConfigureAwait(false);
+
+            if (cloudBlobDirectory == null)
+            {
+                throw new DatasetQueryFileNotFoundException(
+                    datasetQueryFileId);
+            }
+
+            // List all the files in the directory.
+            IEnumerable<IListBlobItem> listBlobItems =
+                await cloudBlobDirectory.Container
+                    .ListBlobsAsync(cloudBlobDirectory.Prefix)
+                    .ConfigureAwait(false);
+
+            IEnumerable<CloudBlockBlob> cloudBlockBlobs =
+                listBlobItems
+                    .Where(x => x is CloudBlockBlob)
+                    .Cast<CloudBlockBlob>();
+
+            CloudBlockBlob queryFile = cloudBlockBlobs.SingleOrDefault(
+                x => x.Name.EndsWith(
+                    this.datasetQueryFileQueryFilename,
+                    StringComparison.InvariantCulture));
+
+            if (queryFile == null)
+            {
+                throw new IncompleteDatasetQueryFileException(
+                    this.datasetQueryFileQueryFilename);
+            }
+
+            string query =
+                await this.GetFileContentsAsString(
+                    queryFile,
+                    cancellationToken)
+                    .ConfigureAwait(false);
+
+            CloudBlockBlob configFile = cloudBlockBlobs.SingleOrDefault(
+                x => x.Name.EndsWith(
+                    this.datasetQueryFileConfigFilename,
+                    StringComparison.InvariantCulture));
+
+            if (configFile == null)
+            {
+                throw new IncompleteDatasetQueryFileException(
+                    this.datasetQueryFileConfigFilename);
+            }
+
+            string configurationStr = await this.GetFileContentsAsString(
+                configFile,
+                cancellationToken)
+                .ConfigureAwait(false);
+
+            QueryConfiguration queryConfiguration =
+                JsonConvert.DeserializeObject<QueryConfiguration>(configurationStr);
+
+            toReturn = new DatasetQueryFile()
+            {
+                Query = query,
+                QueryConfiguration = queryConfiguration,
+            };
+
+            return toReturn;
+        }
+
+        private async Task<string> GetFileContentsAsString(
+            CloudBlockBlob cloudBlockBlob,
+            CancellationToken cancellationToken)
+        {
+            string toReturn = null;
+
+            byte[] configFileBytes =
+                new byte[cloudBlockBlob.Properties.Length];
+
+            this.loggerWrapper.Debug(
+                $"{cloudBlockBlob.Name}: Downloading " +
+                $"{configFileBytes.Length} byte(s)...");
+
+            BlobRequestOptions blobRequestOptions = null;
+            await cloudBlockBlob.DownloadToByteArrayAsync(
+                configFileBytes,
+                0,
+                AccessCondition.GenerateEmptyCondition(),
+                blobRequestOptions,
+                this.operationContext,
+                cancellationToken)
+                .ConfigureAwait(false);
+
+            this.loggerWrapper.Info(
+                $"File downloaded ({configFileBytes.Length} byte(s)). " +
+                $"Deserialising into a managable format...");
+
+            using (MemoryStream memoryStream = new MemoryStream(configFileBytes))
+            {
+                using (StreamReader streamReader = new StreamReader(memoryStream))
+                {
+                    toReturn = streamReader.ReadToEnd();
+                }
+            }
+
+            return toReturn;
+        }
+
+        private async Task<CloudBlobDirectory> GetDatasetQueryFileDirectory(
+            string datasetQueryFileId)
+        {
+            CloudBlobDirectory toReturn = null;
 
             CloudBlobContainer cloudBlobContainer =
                 await this.GetContainerAsync(
@@ -84,20 +198,11 @@
 
             string prefix = $"{datasetQueryFileId}/";
 
-            CloudBlobDirectory cloudBlobDirectory = listBlobItems
+            toReturn = listBlobItems
                 .Where(x => x is CloudBlobDirectory)
                 .Cast<CloudBlobDirectory>()
                 .SingleOrDefault(x => x.Prefix == prefix);
 
-            if (cloudBlobDirectory == null)
-            {
-                throw new FileNotFoundException(
-                    $"Could not find directory for " +
-                    $"{nameof(datasetQueryFileId)} = " +
-                    $"\"{datasetQueryFileId}\".");
-            }
-
-            // TODO: Get the files out, return 'em.
             return toReturn;
         }
 

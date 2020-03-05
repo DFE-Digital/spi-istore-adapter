@@ -11,6 +11,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
+    using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -91,7 +92,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             }
 
             // Parse and validate the id to a CensusIdentifier.
-            this.censusIdentifier = this.ParseIdentifier(id);
+            this.censusIdentifier = ParseIdentifier(id);
 
             if (this.censusIdentifier != null)
             {
@@ -203,40 +204,47 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                     toReturn = new JsonResult(census, jsonSerializerSettings);
                 }
             }
-            catch (FileNotFoundException fileNotFoundException)
+            catch (DatasetQueryFileNotFoundException datasetQueryFileNotFoundException)
             {
-                string datasetQueryFileId =
-                    this.censusIdentifier.DatasetQueryFileId;
+                string message = datasetQueryFileNotFoundException.Message;
 
                 this.loggerWrapper.Info(
-                    $"The requested {nameof(datasetQueryFileId)}, " +
-                    $"\"{datasetQueryFileId}\", could not be found.",
-                    fileNotFoundException);
+                    $"A {nameof(DatasetQueryFileNotFoundException)} was " +
+                    $"thrown: {message}");
 
                 toReturn =
                     this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
                         HttpStatusCode.NotFound,
                         4,
-                        datasetQueryFileId);
+                        message);
+            }
+            catch (IncompleteDatasetQueryFileException incompleteDatasetQueryFileException)
+            {
+                string message = incompleteDatasetQueryFileException.Message;
+
+                this.loggerWrapper.Error(
+                    $"An {nameof(IncompleteDatasetQueryFileException)} was " +
+                    $"thrown: {message}",
+                    incompleteDatasetQueryFileException);
+
+                toReturn =
+                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                        HttpStatusCode.UnprocessableEntity,
+                        5,
+                        message);
             }
 
             return toReturn;
         }
 
-        private CensusIdentifier ParseIdentifier(string censusIdentifierStr)
+        private static CensusIdentifier ParseIdentifier(
+            string censusIdentifierStr)
         {
             CensusIdentifier toReturn = null;
-
-            this.loggerWrapper.Debug(
-                $"Splitting \"{censusIdentifierStr}\" up by its hyphens...");
 
             string[] identifierParts = censusIdentifierStr.Split(
                 '-',
                 StringSplitOptions.RemoveEmptyEntries);
-
-            this.loggerWrapper.Debug(
-                $"{nameof(identifierParts)}.{nameof(identifierParts.Length)} " +
-                $"= {identifierParts.Length}");
 
             if (identifierParts.Length == 3)
             {

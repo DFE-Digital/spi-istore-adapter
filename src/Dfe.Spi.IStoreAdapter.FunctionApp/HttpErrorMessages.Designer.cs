@@ -88,11 +88,20 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find dataset query file with identifier &quot;{0}&quot;..
+        ///   Looks up a localized string similar to A DatasetQueryFileNotFoundException was thrown: {0}.
         /// </summary>
         internal static string _4 {
             get {
                 return ResourceManager.GetString("_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An IncompleteDatasetQueryFileException was thrown: {0}.
+        /// </summary>
+        internal static string _5 {
+            get {
+                return ResourceManager.GetString("_5", resourceCulture);
             }
         }
     }

@@ -37,6 +37,9 @@
       "type": "string",
       "minLength": 7,
       "maxLength": 15
+    },
+    "datasetQueryFileStorageContainerName": {
+      "type": "string"
     }
   },
   "variables": {
@@ -150,7 +153,7 @@
             },
             {
               "name": "DatasetQueryFileStorageContainerName",
-              "value": "dataset-query-files"
+              "value": "[parameters('datasetQueryFileStorageContainerName')]"
             },
             {
               "name": "DatasetQueryFileQueryFilename",

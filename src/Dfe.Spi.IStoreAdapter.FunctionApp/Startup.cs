@@ -13,6 +13,7 @@
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.FunctionApp.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage;
+    using Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
     using Microsoft.Azure.WebJobs.Logging;
     using Microsoft.Extensions.DependencyInjection;
@@ -50,7 +51,7 @@
 
             AddLogging(serviceCollection);
             AddSettingsProviders(serviceCollection);
-            AddStorageAdapters(serviceCollection);
+            AddAdapters(serviceCollection);
 
             HttpErrorBodyResultProvider httpErrorBodyResultProvider =
                 new HttpErrorBodyResultProvider(
@@ -78,11 +79,12 @@
                 .AddSingleton<IDatasetQueryFilesStorageAdapterSettingsProvider, DatasetQueryFilesStorageAdapterSettingsProvider>();
         }
 
-        private static void AddStorageAdapters(
+        private static void AddAdapters(
             IServiceCollection serviceCollection)
         {
             serviceCollection
-                .AddScoped<IDatasetQueryFilesStorageAdapter, DatasetQueryFileStorageAdapter>();
+                .AddScoped<IDatasetQueryFilesStorageAdapter, DatasetQueryFileStorageAdapter>()
+                .AddScoped<ICensusAdapter, CensusAdapter>();
         }
 
         private static ILogger CreateILogger(IServiceProvider serviceProvider)

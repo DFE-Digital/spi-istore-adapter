@@ -1,7 +1,7 @@
 namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 {
     using System;
-    using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Threading;
@@ -11,7 +11,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
-    using Dfe.Spi.IStoreAdapter.Domain.Models;
+    using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -26,8 +26,9 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
+        private readonly ILoggerWrapper loggerWrapper;
 
-        private string id;
+        private CensusIdentifier censusIdentifier;
 
         /// <summary>
         /// Initialises a new instance of the <see cref="Censuses" /> class.
@@ -53,6 +54,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         {
             this.censusProcessor = censusProcessor;
             this.httpErrorBodyResultProvider = httpErrorBodyResultProvider;
+            this.loggerWrapper = loggerWrapper;
         }
 
         /// <summary>
@@ -84,27 +86,39 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                 throw new ArgumentNullException(nameof(httpRequest));
             }
 
-            this.id = id;
-
-            switch (httpRequest.Method)
+            if (string.IsNullOrEmpty(id))
             {
-                case "POST":
+                throw new ArgumentNullException(nameof(id));
+            }
 
-                    toReturn = await this.ValidateAndRunAsync(
-                        httpRequest,
-                        cancellationToken)
-                        .ConfigureAwait(false);
+            // Parse and validate the id to a CensusIdentifier.
+            this.censusIdentifier = ParseIdentifier(id);
 
-                    break;
+            if (this.censusIdentifier != null)
+            {
+                switch (httpRequest.Method)
+                {
+                    case "POST":
+                        toReturn = await this.ValidateAndRunAsync(
+                            httpRequest,
+                            cancellationToken)
+                            .ConfigureAwait(false);
+                        break;
 
-                case "GET":
-
-                    toReturn = await this.ProcessWellFormedRequestAsync(
-                        null,
-                        cancellationToken)
-                        .ConfigureAwait(false);
-
-                    break;
+                    case "GET":
+                        toReturn = await this.ProcessWellFormedRequestAsync(
+                            null,
+                            cancellationToken)
+                            .ConfigureAwait(false);
+                        break;
+                }
+            }
+            else
+            {
+                toReturn =
+                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                        HttpStatusCode.BadRequest,
+                        3);
             }
 
             return toReturn;
@@ -141,50 +155,105 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         {
             IActionResult toReturn = null;
 
+            if (getCensusRequest == null)
+            {
+                getCensusRequest = new GetCensusRequest();
+            }
+
+            getCensusRequest.CensusIdentifier = this.censusIdentifier;
+
             try
             {
-                // TODO: Wire up to processor response.
+                // TODO: Wire up result to processor response, when the below
+                //       is removed.
                 GetCensusResponse getCensusResponse =
                     await this.censusProcessor.GetCensusAsync(
                         getCensusRequest,
                         cancellationToken)
                         .ConfigureAwait(false);
+
+                // TODO: Temporary stubbing - to be removed.
+                Aggregation[] aggregations = null;
+                if (getCensusRequest.AggregateQueries != null)
+                {
+                    aggregations = getCensusRequest
+                        .AggregateQueries
+                        .Select(x => new Aggregation()
+                        {
+                            Name = x.Key,
+                            Value = x.Key.GetHashCode(StringComparison.InvariantCulture),
+                        })
+                        .ToArray();
+                }
+
+                Models.Entities.Census census = new Models.Entities.Census()
+                {
+                    Name = $"Requested Census: Id {this.censusIdentifier}",
+                    _Aggregations = aggregations,
+                };
+
+                JsonSerializerSettings jsonSerializerSettings =
+                    JsonConvert.DefaultSettings();
+
+                if (jsonSerializerSettings == null)
+                {
+                    toReturn = new JsonResult(census);
+                }
+                else
+                {
+                    toReturn = new JsonResult(census, jsonSerializerSettings);
+                }
             }
-            catch (NotImplementedException)
+            catch (DatasetQueryFileNotFoundException datasetQueryFileNotFoundException)
             {
-                // Nothing, just want to return.
+                string message = datasetQueryFileNotFoundException.Message;
+
+                this.loggerWrapper.Info(
+                    $"A {nameof(DatasetQueryFileNotFoundException)} was " +
+                    $"thrown: {message}");
+
+                toReturn =
+                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                        HttpStatusCode.NotFound,
+                        4,
+                        message);
+            }
+            catch (IncompleteDatasetQueryFileException incompleteDatasetQueryFileException)
+            {
+                string message = incompleteDatasetQueryFileException.Message;
+
+                this.loggerWrapper.Error(
+                    $"An {nameof(IncompleteDatasetQueryFileException)} was " +
+                    $"thrown: {message}",
+                    incompleteDatasetQueryFileException);
+
+                toReturn =
+                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                        HttpStatusCode.UnprocessableEntity,
+                        5,
+                        message);
             }
 
-            // TODO: Temporary stubbing - to be removed.
-            Aggregation[] aggregations = null;
-            if (getCensusRequest != null)
-            {
-                aggregations = getCensusRequest
-                    .AggregateQueries
-                    .Select(x => new Aggregation()
-                    {
-                        Name = x.Key,
-                        Value = x.Key.GetHashCode(StringComparison.InvariantCulture),
-                    })
-                    .ToArray();
-            }
+            return toReturn;
+        }
 
-            Models.Entities.Census census = new Models.Entities.Census()
-            {
-                Name = $"Requested Census: Id {this.id}",
-                _Aggregations = aggregations,
-            };
+        private static CensusIdentifier ParseIdentifier(
+            string censusIdentifierStr)
+        {
+            CensusIdentifier toReturn = null;
 
-            JsonSerializerSettings jsonSerializerSettings =
-                JsonConvert.DefaultSettings();
+            string[] identifierParts = censusIdentifierStr.Split(
+                '-',
+                StringSplitOptions.RemoveEmptyEntries);
 
-            if (jsonSerializerSettings == null)
+            if (identifierParts.Length == 3)
             {
-                toReturn = new JsonResult(census);
-            }
-            else
-            {
-                toReturn = new JsonResult(census, jsonSerializerSettings);
+                toReturn = new CensusIdentifier()
+                {
+                    DatasetQueryFileId = identifierParts[0],
+                    ParameterName = identifierParts[1],
+                    ParameterValue = identifierParts[2],
+                };
             }
 
             return toReturn;

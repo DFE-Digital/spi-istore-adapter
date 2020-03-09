@@ -40,6 +40,9 @@
     },
     "datasetQueryFileStorageContainerName": {
       "type": "string"
+    },
+    "iStoreSqlConnectionString": {
+      "type": "securestring"
     }
   },
   "variables": {
@@ -162,6 +165,10 @@
             {
               "name": "DatasetQueryFileConfigFilename",
               "value": "config.json"
+            },
+            {
+              "name": "IStoreSqlConnectionString",
+              "value": "[parameters('iStoreSqlConnectionString')]"
             }
           ],
           "ipSecurityRestrictions": [

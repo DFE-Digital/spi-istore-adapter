@@ -2,6 +2,7 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
 
     /// <summary>

@@ -10,8 +10,10 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Dfe.Spi.Common.Http.Server.Definitions;
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Exceptions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
     using Dfe.Spi.IStoreAdapter.Domain;
+    using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
     using Dfe.Spi.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -246,6 +248,22 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                     this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
                         HttpStatusCode.FailedDependency,
                         6,
+                        message);
+            }
+            catch (UnsupportedAggregateColumnRequestException unsupportedAggregateColumnRequestException)
+            {
+                string message = unsupportedAggregateColumnRequestException.Message;
+
+                this.loggerWrapper.Error(
+                    $"An " +
+                    $"{nameof(UnsupportedAggregateColumnRequestException)} " +
+                    $"was thrown: {message}",
+                    unsupportedAggregateColumnRequestException);
+
+                toReturn =
+                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                        HttpStatusCode.BadRequest,
+                        7,
                         message);
             }
 

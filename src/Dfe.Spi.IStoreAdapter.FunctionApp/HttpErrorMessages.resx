@@ -135,4 +135,7 @@
   <data name="_6" xml:space="preserve">
     <value>A TranslationApiAdapterException was thrown: {0}</value>
   </data>
+  <data name="_7" xml:space="preserve">
+    <value>An UnsupportedAggregateColumnRequestException was thrown: {0}</value>
+  </data>
 </root>

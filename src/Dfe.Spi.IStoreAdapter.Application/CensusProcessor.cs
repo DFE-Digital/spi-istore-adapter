@@ -9,6 +9,7 @@
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions.SettingsProvider;
+    using Dfe.Spi.IStoreAdapter.Application.Exceptions;
     using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
@@ -142,6 +143,8 @@
             Dictionary<string, AggregateQuery> aggregateQueries =
                 getCensusRequest.AggregateQueries;
 
+            AssertFieldsAreSUpported(aggregationFields, aggregateQueries);
+
             this.loggerWrapper.Debug(
                 $"Fetching {nameof(Census)} using {datasetQueryFile} and " +
                 $"supplied aggregate queries...");
@@ -166,6 +169,31 @@
             };
 
             return toReturn;
+        }
+
+        private static void AssertFieldsAreSUpported(
+            IEnumerable<string> aggregationFields,
+            Dictionary<string, AggregateQuery> aggregateQueries)
+        {
+            // First, get a distinct list of all the requested columns.
+            string[] requestedFields = aggregateQueries
+                .SelectMany(x => x.Value.DataFilters)
+                .Select(x => x.Field)
+                .Distinct()
+                .ToArray();
+
+            // Then, check if any columns been requested that are not
+            // available.
+            string[] unsupportedFields = requestedFields
+                .Where(x => !aggregationFields.Any(y => y == x))
+                .ToArray();
+
+            if (unsupportedFields.Length > 0)
+            {
+                throw new UnsupportedAggregateColumnRequestException(
+                    unsupportedFields,
+                    aggregationFields);
+            }
         }
 
         private Census BuildCensusResults(DbDataReader dbDataReader)

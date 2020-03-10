@@ -113,5 +113,14 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
                 return ResourceManager.GetString("_6", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An UnsupportedAggregateColumnRequestException was thrown: {0}.
+        /// </summary>
+        internal static string _7 {
+            get {
+                return ResourceManager.GetString("_7", resourceCulture);
+            }
+        }
     }
 }

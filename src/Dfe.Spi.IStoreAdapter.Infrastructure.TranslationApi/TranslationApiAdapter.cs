@@ -13,6 +13,7 @@
     using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
+    using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Newtonsoft.Json;
     using RestSharp;

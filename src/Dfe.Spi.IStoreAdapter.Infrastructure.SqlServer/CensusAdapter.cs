@@ -7,11 +7,14 @@
     using System.Data.SqlClient;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
+    using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
     using Dfe.Spi.Models.Entities;
@@ -21,6 +24,8 @@
     /// </summary>
     public class CensusAdapter : ICensusAdapter
     {
+        private const string ColumnParameterFormat = "{0}Requested";
+
         private readonly ILoggerWrapper loggerWrapper;
 
         /// <summary>
@@ -58,6 +63,12 @@
                     nameof(buildCensusResultsCallback));
             }
 
+            string[] requestedFields = aggregateQueries
+                .SelectMany(x => x.Value.DataFilters)
+                .Select(x => x.Field)
+                .Distinct()
+                .ToArray();
+
             QueryConfiguration queryConfiguration =
                 datasetQueryFile.QueryConfiguration;
 
@@ -67,6 +78,8 @@
             string query = datasetQueryFile.Query;
 
             Census census = await this.ExecuteQueryAsync(
+                aggregationFields,
+                requestedFields,
                 connectionString,
                 query,
                 parameterName,
@@ -84,6 +97,8 @@
         }
 
         private async Task<Census> ExecuteQueryAsync(
+            IEnumerable<string> aggregationFields,
+            IEnumerable<string> requestedFields,
             string connectionString,
             string query,
             string parameterName,
@@ -109,7 +124,7 @@
                     $"{sqlConnection.ClientConnectionId}).");
 
                 DbDataReader dbDataReader = null;
-                using (SqlCommand sqlCommand = this.GetSqlCommand(sqlConnection, query, parameterName, parameterValue))
+                using (SqlCommand sqlCommand = this.GetSqlCommand(sqlConnection, query, aggregationFields, requestedFields, parameterName, parameterValue))
                 {
                     stopwatch.Start();
 
@@ -151,6 +166,8 @@
         private SqlCommand GetSqlCommand(
             SqlConnection sqlConnection,
             string query,
+            IEnumerable<string> allPossibleAggregationFields,
+            IEnumerable<string> requestedAggregationFields,
             string parameterName,
             string parameterValue)
         {
@@ -166,6 +183,33 @@
             {
                 CommandType = commandType,
             };
+
+            SqlParameter[] sqlParameters = allPossibleAggregationFields
+                .Select(x =>
+                {
+                    SqlParameter columnParameter = null;
+
+                    string columnParamName = string.Format(
+                        CultureInfo.InvariantCulture,
+                        ColumnParameterFormat,
+                        x);
+
+                    bool columnParamValue = requestedAggregationFields
+                        .Contains(x);
+
+                    columnParameter = new SqlParameter(
+                        columnParamName,
+                        columnParamValue);
+
+                    return columnParameter;
+                })
+                .ToArray();
+
+            this.loggerWrapper.Debug(
+                $"Adding {sqlParameters.Length} column requested " +
+                $"{nameof(SqlParameter)}s...");
+
+            toReturn.Parameters.AddRange(sqlParameters);
 
             SqlParameter sqlParameter = new SqlParameter(
                 parameterName,

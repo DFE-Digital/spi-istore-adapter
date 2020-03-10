@@ -1,4 +1,4 @@
-﻿namespace Dfe.Spi.IStoreAdapter.Domain
+﻿namespace Dfe.Spi.IStoreAdapter.Domain.Exceptions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;

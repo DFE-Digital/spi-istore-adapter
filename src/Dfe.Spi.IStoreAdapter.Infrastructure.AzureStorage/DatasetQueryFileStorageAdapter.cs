@@ -11,6 +11,7 @@
     using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
+    using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Blob;

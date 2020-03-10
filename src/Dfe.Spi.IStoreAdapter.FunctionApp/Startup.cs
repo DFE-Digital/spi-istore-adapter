@@ -9,6 +9,7 @@
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.FunctionApp.SettingsProviders;
@@ -60,6 +61,7 @@
 
             serviceCollection
                 .AddSingleton<IHttpErrorBodyResultProvider>(httpErrorBodyResultProvider)
+                .AddSingleton<AggregationFieldsCache>()
                 .AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>()
                 .AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>())
                 .AddScoped<ICensusProcessor, CensusProcessor>();

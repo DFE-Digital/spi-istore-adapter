@@ -10,6 +10,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Dfe.Spi.Common.Logging.Definitions;
+    using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
@@ -36,10 +37,12 @@
 
         /// <inheritdoc />
         public async Task<Census> GetCensusAsync(
+            IEnumerable<string> aggregationFields,
             DatasetQueryFile datasetQueryFile,
             Dictionary<string, AggregateQuery> aggregateQueries,
             string parameterName,
             string parameterValue,
+            BuildCensusResultsCallback buildCensusResultsCallback,
             CancellationToken cancellationToken)
         {
             Census toReturn = null;
@@ -47,6 +50,12 @@
             if (datasetQueryFile == null)
             {
                 throw new ArgumentNullException(nameof(datasetQueryFile));
+            }
+
+            if (buildCensusResultsCallback == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(buildCensusResultsCallback));
             }
 
             QueryConfiguration queryConfiguration =
@@ -62,6 +71,7 @@
                 query,
                 parameterName,
                 parameterValue,
+                buildCensusResultsCallback,
                 cancellationToken)
                 .ConfigureAwait(false);
 
@@ -78,6 +88,7 @@
             string query,
             string parameterName,
             string parameterValue,
+            BuildCensusResultsCallback buildCensusResultsCallback,
             CancellationToken cancellationToken)
         {
             Census toReturn = null;
@@ -122,26 +133,13 @@
                     this.loggerWrapper.Debug(
                         $"Building results from {nameof(SqlDataReader)}...");
 
-                    toReturn = this.BuildCensusResults(dbDataReader);
+                    toReturn = buildCensusResultsCallback(dbDataReader);
 
                     this.loggerWrapper.Info(
                         $"{nameof(Census)} constructed: {toReturn}. " +
                         $"Returning.");
                 }
             }
-
-            return toReturn;
-        }
-
-        private Census BuildCensusResults(DbDataReader dbDataReader)
-        {
-            Census toReturn = null;
-
-            // TODO: Build up aggregates, etc.
-            toReturn = new Census()
-            {
-                // Nothing for now.
-            };
 
             return toReturn;
         }

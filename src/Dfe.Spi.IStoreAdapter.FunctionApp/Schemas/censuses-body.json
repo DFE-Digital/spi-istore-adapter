@@ -42,10 +42,17 @@
                 "operator"
               ]
             }
+          },
+          "aggregateType": {
+            "type": "string",
+            "enum": [
+              "Count"
+            ]
           }
         },
         "required": [
-          "dataFilters"
+          "dataFilters",
+          "aggregateType"
         ]
       }
     }

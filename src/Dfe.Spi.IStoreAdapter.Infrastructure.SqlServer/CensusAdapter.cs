@@ -63,12 +63,6 @@
                     nameof(buildCensusResultsCallback));
             }
 
-            string[] requestedFields = aggregateQueries
-                .SelectMany(x => x.Value.DataFilters)
-                .Select(x => x.Field)
-                .Distinct()
-                .ToArray();
-
             QueryConfiguration queryConfiguration =
                 datasetQueryFile.QueryConfiguration;
 
@@ -79,7 +73,7 @@
 
             Census census = await this.ExecuteQueryAsync(
                 aggregationFields,
-                requestedFields,
+                aggregateQueries,
                 connectionString,
                 query,
                 parameterName,
@@ -98,7 +92,7 @@
 
         private async Task<Census> ExecuteQueryAsync(
             IEnumerable<string> aggregationFields,
-            IEnumerable<string> requestedFields,
+            Dictionary<string, AggregateQuery> aggregateQueries,
             string connectionString,
             string query,
             string parameterName,
@@ -107,6 +101,12 @@
             CancellationToken cancellationToken)
         {
             Census toReturn = null;
+
+            string[] requestedFields = aggregateQueries
+                .SelectMany(x => x.Value.DataFilters)
+                .Select(x => x.Field)
+                .Distinct()
+                .ToArray();
 
             Stopwatch stopwatch = new Stopwatch();
 
@@ -148,7 +148,9 @@
                     this.loggerWrapper.Debug(
                         $"Building results from {nameof(SqlDataReader)}...");
 
-                    toReturn = buildCensusResultsCallback(dbDataReader);
+                    toReturn = buildCensusResultsCallback(
+                        aggregateQueries,
+                        dbDataReader);
 
                     this.loggerWrapper.Info(
                         $"{nameof(Census)} constructed: {toReturn}. " +

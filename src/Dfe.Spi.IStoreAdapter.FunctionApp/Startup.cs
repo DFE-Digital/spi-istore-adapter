@@ -9,7 +9,9 @@
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Definitions.Factories;
     using Dfe.Spi.IStoreAdapter.Application.Definitions.SettingsProvider;
+    using Dfe.Spi.IStoreAdapter.Application.Factories;
     using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
@@ -53,6 +55,7 @@
                 functionsHostBuilder.Services;
 
             AddAdapters(serviceCollection);
+            AddFactories(serviceCollection);
             AddLogging(serviceCollection);
             AddSettingsProviders(serviceCollection);
             AddManagers(serviceCollection);
@@ -75,6 +78,13 @@
                 .AddScoped<ICensusAdapter, CensusAdapter>()
                 .AddScoped<IDatasetQueryFilesStorageAdapter, DatasetQueryFileStorageAdapter>()
                 .AddScoped<ITranslationApiAdapter, TranslationApiAdapter>();
+        }
+
+        private static void AddFactories(
+            IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                .AddScoped<IAggregatorFactory, AggregatorFactory>();
         }
 
         private static void AddLogging(IServiceCollection serviceCollection)

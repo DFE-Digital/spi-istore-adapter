@@ -3,11 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.Data.Common;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Definitions.Factories;
     using Dfe.Spi.IStoreAdapter.Application.Definitions.SettingsProvider;
     using Dfe.Spi.IStoreAdapter.Application.Exceptions;
     using Dfe.Spi.IStoreAdapter.Application.Models;
@@ -15,6 +17,7 @@
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
+    using Dfe.Spi.Models;
     using Dfe.Spi.Models.Entities;
 
     /// <summary>
@@ -22,6 +25,7 @@
     /// </summary>
     public class CensusProcessor : ICensusProcessor
     {
+        private readonly IAggregatorFactory aggregatorFactory;
         private readonly ICensusAdapter censusAdapter;
         private readonly IDatasetQueryFilesStorageAdapter datasetQueryFilesStorageAdapter;
         private readonly ILoggerWrapper loggerWrapper;
@@ -36,6 +40,9 @@
         /// </summary>
         /// <param name="aggregationFieldsCache">
         /// An instance of <see cref="AggregationFieldsCache" />.
+        /// </param>
+        /// <param name="aggregatorFactory">
+        /// An instance of type <see cref="IAggregatorFactory" />.
         /// </param>
         /// <param name="censusAdapter">
         /// An instance of type <see cref="ICensusAdapter" />.
@@ -56,6 +63,7 @@
         /// </param>
         public CensusProcessor(
             AggregationFieldsCache aggregationFieldsCache,
+            IAggregatorFactory aggregatorFactory,
             ICensusAdapter censusAdapter,
             ICensusProcessorSettingsProvider censusProcessorSettingsProvider,
             IDatasetQueryFilesStorageAdapter datasetQueryFilesStorageAdapter,
@@ -68,6 +76,7 @@
                     nameof(censusProcessorSettingsProvider));
             }
 
+            this.aggregatorFactory = aggregatorFactory;
             this.aggregationFieldsCache = aggregationFieldsCache;
             this.censusAdapter = censusAdapter;
             this.datasetQueryFilesStorageAdapter = datasetQueryFilesStorageAdapter;
@@ -196,13 +205,56 @@
             }
         }
 
-        private Census BuildCensusResults(DbDataReader dbDataReader)
+        private Census BuildCensusResults(
+            Dictionary<string, AggregateQuery> aggregateQueries,
+            DbDataReader dbDataReader)
         {
             Census toReturn = null;
 
+            IAggregator[] aggregators = aggregateQueries
+                .Select(x => x.Value)
+                .Select(this.aggregatorFactory.Create)
+                .ToArray();
+
+            this.loggerWrapper.Info(
+                $"{aggregators.Length} {nameof(IAggregator)}s created. " +
+                $"Cycling through rows...");
+
+            int rowNumber = 0;
+            Stopwatch stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+
+            while (dbDataReader.Read())
+            {
+                foreach (IAggregator aggregator in aggregators)
+                {
+                    aggregator.ProcessRow(dbDataReader);
+                }
+
+                rowNumber++;
+            }
+
+            stopwatch.Stop();
+
+            TimeSpan elapsed = stopwatch.Elapsed;
+
+            this.loggerWrapper.Info(
+                $"{rowNumber} row(s) cycled through in {elapsed}.");
+
+            this.loggerWrapper.Debug(
+                $"Quizzing {nameof(IAggregator)}s for results...");
+
+            Aggregation[] aggregations = aggregators
+                .Select(x => x.Result)
+                .ToArray();
+
+            this.loggerWrapper.Info(
+                $"{aggregations.Length} {nameof(Aggregation)}(s) returned.");
+
             toReturn = new Census()
             {
-                // Nothing for now...
+                _Aggregations = aggregations.ToArray(),
             };
 
             return toReturn;

@@ -132,4 +132,7 @@
   <data name="_5" xml:space="preserve">
     <value>An IncompleteDatasetQueryFileException was thrown: {0}</value>
   </data>
+  <data name="_6" xml:space="preserve">
+    <value>A TranslationApiAdapterException was thrown: {0}</value>
+  </data>
 </root>

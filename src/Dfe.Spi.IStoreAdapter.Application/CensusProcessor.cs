@@ -3,10 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Data.Common;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Definitions.SettingsProvider;
     using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
@@ -19,10 +21,13 @@
     /// </summary>
     public class CensusProcessor : ICensusProcessor
     {
-        private readonly AggregationFieldsCache aggregationFieldsCache;
         private readonly ICensusAdapter censusAdapter;
         private readonly IDatasetQueryFilesStorageAdapter datasetQueryFilesStorageAdapter;
         private readonly ILoggerWrapper loggerWrapper;
+        private readonly ITranslationApiAdapter translationApiAdapter;
+
+        private readonly AggregationFieldsCache aggregationFieldsCache;
+        private readonly string aggregationFieldsEnumerationName;
 
         /// <summary>
         /// Initialises a new instance of the <see cref="CensusProcessor" />
@@ -34,6 +39,10 @@
         /// <param name="censusAdapter">
         /// An instance of type <see cref="ICensusAdapter" />.
         /// </param>
+        /// <param name="censusProcessorSettingsProvider">
+        /// An instance of type
+        /// <see cref="ICensusProcessorSettingsProvider" />.
+        /// </param>
         /// <param name="datasetQueryFilesStorageAdapter">
         /// An instance of type
         /// <see cref="IDatasetQueryFilesStorageAdapter" />.
@@ -41,16 +50,31 @@
         /// <param name="loggerWrapper">
         /// An instance of type <see cref="ILoggerWrapper" />.
         /// </param>
+        /// <param name="translationApiAdapter">
+        /// An instance of type <see cref="ITranslationApiAdapter" />.
+        /// </param>
         public CensusProcessor(
             AggregationFieldsCache aggregationFieldsCache,
             ICensusAdapter censusAdapter,
+            ICensusProcessorSettingsProvider censusProcessorSettingsProvider,
             IDatasetQueryFilesStorageAdapter datasetQueryFilesStorageAdapter,
-            ILoggerWrapper loggerWrapper)
+            ILoggerWrapper loggerWrapper,
+            ITranslationApiAdapter translationApiAdapter)
         {
+            if (censusProcessorSettingsProvider == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(censusProcessorSettingsProvider));
+            }
+
             this.aggregationFieldsCache = aggregationFieldsCache;
             this.censusAdapter = censusAdapter;
             this.datasetQueryFilesStorageAdapter = datasetQueryFilesStorageAdapter;
             this.loggerWrapper = loggerWrapper;
+            this.translationApiAdapter = translationApiAdapter;
+
+            this.aggregationFieldsEnumerationName =
+                censusProcessorSettingsProvider.AggregationFieldsEnumerationName;
         }
 
         /// <inheritdoc />
@@ -91,8 +115,22 @@
                     "Fetching available aggregation fields from the " +
                     "Translator API...");
 
-                // TODO: Then get from the Translator API the aggregation
-                //       fields, and cache 'em.
+                GetEnumerationValuesResponse getEnumerationValuesResponse =
+                    await this.translationApiAdapter.GetEnumerationValuesAsync(
+                        this.aggregationFieldsEnumerationName,
+                        cancellationToken)
+                        .ConfigureAwait(false);
+
+                IEnumerable<string> enumerationValues = getEnumerationValuesResponse
+                    .EnumerationValuesResult
+                    .EnumerationValues;
+
+                this.loggerWrapper.Info(
+                    $"Aggregation fields returned - " +
+                    $"{enumerationValues.Count()} in total.");
+
+                this.aggregationFieldsCache.AggregationFields =
+                    enumerationValues;
             }
 
             IEnumerable<string> aggregationFields =

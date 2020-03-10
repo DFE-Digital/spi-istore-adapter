@@ -17,7 +17,7 @@
     using Dfe.Spi.Models.Entities;
 
     /// <summary>
-    /// Implements <see cref="ICensusAdapter" />.
+    /// Implements <see cref="ITranslationApiAdapter" />.
     /// </summary>
     public class CensusAdapter : ICensusAdapter
     {

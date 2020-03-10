@@ -233,6 +233,21 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                         5,
                         message);
             }
+            catch (TranslationApiAdapterException translationApiAdapterException)
+            {
+                string message = translationApiAdapterException.Message;
+
+                this.loggerWrapper.Error(
+                    $"A {nameof(TranslationApiAdapterException)} was " +
+                    $"thrown: {message}",
+                    translationApiAdapterException);
+
+                toReturn =
+                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                        HttpStatusCode.FailedDependency,
+                        6,
+                        message);
+            }
 
             return toReturn;
         }

@@ -104,5 +104,14 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
                 return ResourceManager.GetString("_5", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A TranslationApiAdapterException was thrown: {0}.
+        /// </summary>
+        internal static string _6 {
+            get {
+                return ResourceManager.GetString("_6", resourceCulture);
+            }
+        }
     }
 }

@@ -130,6 +130,12 @@
             IComparable actualUnboxedFieldValueComparable =
                 actualUnboxedFieldValue as IComparable;
 
+            // For reference, IComparable.CompareTo will return:
+            // -1: Invoking item is smaller than the passed in item.
+            //  0: Invoking item is the same as the passed in item.
+            //  1: Invoking item is greater than the passed in item.
+            int compareToResult;
+
             // We have the field value, now.
             // Take the operation...
             DataOperator dataOperator = dataFilter.Operator;
@@ -171,10 +177,23 @@
                 case DataOperator.GreaterThan:
                     unboxedValue = this.UnboxFilterValue(field, value);
 
-                    int result = actualUnboxedFieldValueComparable
+                    compareToResult = actualUnboxedFieldValueComparable
                         .CompareTo(unboxedValue);
 
-                    toReturn = result > 0;
+                    toReturn = compareToResult == 1;
+
+                    break;
+
+                case DataOperator.GreaterThanOrEqualTo:
+                    unboxedValue = this.UnboxFilterValue(field, value);
+
+                    compareToResult = actualUnboxedFieldValueComparable
+                        .CompareTo(unboxedValue);
+
+                    toReturn =
+                        (compareToResult == 0)
+                            ||
+                        (compareToResult == 1);
 
                     break;
 

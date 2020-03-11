@@ -127,11 +127,15 @@
                 actualUnboxedFieldValue = dbDataReader[field];
             }
 
+            IComparable actualUnboxedFieldValueComparable =
+                actualUnboxedFieldValue as IComparable;
+
             // We have the field value, now.
             // Take the operation...
             DataOperator dataOperator = dataFilter.Operator;
 
             string value = dataFilter.Value;
+            object unboxedValue = null;
 
             switch (dataOperator)
             {
@@ -158,9 +162,19 @@
                     // it.
                     // The string, however, we'll need to unbox, at least
                     // into an object.
-                    object unboxedValue = this.UnboxFilterValue(field, value);
+                    unboxedValue = this.UnboxFilterValue(field, value);
 
                     toReturn = actualUnboxedFieldValue.Equals(unboxedValue);
+
+                    break;
+
+                case DataOperator.GreaterThan:
+                    unboxedValue = this.UnboxFilterValue(field, value);
+
+                    int result = actualUnboxedFieldValueComparable
+                        .CompareTo(unboxedValue);
+
+                    toReturn = result > 0;
 
                     break;
 

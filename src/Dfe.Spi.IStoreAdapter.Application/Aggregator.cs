@@ -92,6 +92,16 @@
             }
         }
 
+        private static DateTime UnboxDataFilterValue(string value)
+        {
+            DateTime toReturn = DateTime.Parse(
+                value,
+                CultureInfo.InvariantCulture);
+
+            // TODO: Replace with Simon's incoming DateTime parsing function.
+            return toReturn;
+        }
+
         private bool EvaluateDataFilter(
             DbDataReader dbDataReader,
             DataFilter dataFilter)
@@ -119,9 +129,11 @@
             {
                 case DataOperator.Between:
                     // The SQL field value needs to be DateTime for a between.
-                    DateTime actualFieldValue = this.UnboxSqlResultField<DateTime>(
-                        actualUnboxedFieldValue);
+                    DateTime? actualFieldValue =
+                        this.UnboxSqlResultField<DateTime?>(
+                            actualUnboxedFieldValue);
 
+                    // The input DateTimes also need to be DateTimes.
                     Tuple<DateTime, DateTime> betweenDates =
                         this.UnboxBetweenDataFilterValue(value);
 
@@ -129,6 +141,16 @@
                         (actualFieldValue < betweenDates.Item2)
                             &&
                         (actualFieldValue > betweenDates.Item1);
+                    break;
+
+                case DataOperator.Equals:
+                    // We'll not unbox the SQL result field. We'll just take it
+                    // as an object, and perform an equalities operator over
+                    // it.
+                    // The string, however, we'll need to unbox.
+                    // This is dependant on the type, as directed by the
+                    // Translation Service.
+                    // TODO: ...
                     break;
 
                 default:
@@ -159,21 +181,11 @@
                     $"\"2018-07-01T00:00:00Z\".");
             }
 
-            DateTime from = this.UnboxDataFilterValue(datePartsStr.First());
-            DateTime to = this.UnboxDataFilterValue(datePartsStr.Last());
+            DateTime from = UnboxDataFilterValue(datePartsStr.First());
+            DateTime to = UnboxDataFilterValue(datePartsStr.Last());
 
             toReturn = new Tuple<DateTime, DateTime>(from, to);
 
-            return toReturn;
-        }
-
-        private DateTime UnboxDataFilterValue(string value)
-        {
-            DateTime toReturn = DateTime.Parse(
-                value,
-                CultureInfo.InvariantCulture);
-
-            // TODO: Replace with Simon's incoming DateTime parsing function.
             return toReturn;
         }
 

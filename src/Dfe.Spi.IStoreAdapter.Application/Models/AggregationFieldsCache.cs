@@ -1,18 +1,25 @@
 ﻿namespace Dfe.Spi.IStoreAdapter.Application.Models
 {
+    using System;
     using System.Collections.Generic;
-    using Dfe.Spi.Common.Models;
+    using System.Diagnostics.CodeAnalysis;
+    using Dfe.Spi.IStoreAdapter.Domain.Models;
 
     /// <summary>
-    /// Represents a model in which to store aggregation fields.
+    /// Acts as a holding/caching object for
+    /// <see cref="AggregationFieldsAndTypes" />.
     /// </summary>
     public class AggregationFieldsCache : ModelsBase
     {
         /// <summary>
-        /// Gets or sets a set of aggregation fields, as <see cref="string" />
-        /// values.
+        /// Gets or sets the available aggregation fields and their respective
+        /// types.
         /// </summary>
-        public IEnumerable<string> AggregationFields
+        [SuppressMessage(
+            "Microsoft.Usage",
+            "CA2227",
+            Justification = "This is a DTO.")]
+        public Dictionary<string, Type> AggregationFieldsAndTypes
         {
             get;
             set;

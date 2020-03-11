@@ -7,8 +7,17 @@
     public interface ICensusProcessorSettingsProvider
     {
         /// <summary>
+        /// Gets the adapter name used in pulling back the census aggregation
+        /// fields from the Translation API, as a mapping.
+        /// </summary>
+        string AggregationFieldsAdapterName
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the enumeration name used in pulling back the census
-        /// aggregation fields from the Translation API.
+        /// aggregation fields from the Translation API, as a mapping.
         /// </summary>
         string AggregationFieldsEnumerationName
         {

@@ -5,16 +5,16 @@
 
     /// <summary>
     /// Response type for the
-    /// <see cref="ITranslationApiAdapter.GetEnumerationValuesAsync(string, CancellationToken)" />
+    /// <see cref="ITranslationApiAdapter.GetEnumerationMappingsAsync(string, string, CancellationToken)" />
     /// method.
     /// </summary>
-    public class GetEnumerationValuesResponse : ModelsBase
+    public class GetEnumerationMappingsResponse : ModelsBase
     {
         /// <summary>
         /// Gets or sets an instance of
-        /// <see cref="Models.EnumerationValuesResult" />.
+        /// <see cref="Models.MappingsResult" />.
         /// </summary>
-        public EnumerationValuesResult EnumerationValuesResult
+        public MappingsResult MappingsResult
         {
             get;
             set;

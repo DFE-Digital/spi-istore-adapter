@@ -32,6 +32,7 @@
         private readonly ITranslationApiAdapter translationApiAdapter;
 
         private readonly AggregationFieldsCache aggregationFieldsCache;
+        private readonly string aggregationFieldsAdapterName;
         private readonly string aggregationFieldsEnumerationName;
 
         /// <summary>
@@ -83,6 +84,8 @@
             this.loggerWrapper = loggerWrapper;
             this.translationApiAdapter = translationApiAdapter;
 
+            this.aggregationFieldsAdapterName =
+                censusProcessorSettingsProvider.AggregationFieldsAdapterName;
             this.aggregationFieldsEnumerationName =
                 censusProcessorSettingsProvider.AggregationFieldsEnumerationName;
         }
@@ -119,32 +122,37 @@
                 $"\"{datasetQueryFileId}\": {datasetQueryFile}.");
 
             // Get an entire list of aggregation fields that we can use.
-            if (this.aggregationFieldsCache.AggregationFields == null)
+            Dictionary<string, Type> aggregationFieldsAndTypes = null;
+            if (this.aggregationFieldsCache.AggregationFieldsAndTypes == null)
             {
                 this.loggerWrapper.Debug(
-                    "Fetching available aggregation fields from the " +
+                    "Fetching available aggregation mappings from the " +
                     "Translator API...");
 
-                GetEnumerationValuesResponse getEnumerationValuesResponse =
-                    await this.translationApiAdapter.GetEnumerationValuesAsync(
+                GetEnumerationMappingsResponse getEnumerationMappingsResponse =
+                    await this.translationApiAdapter.GetEnumerationMappingsAsync(
                         this.aggregationFieldsEnumerationName,
+                        this.aggregationFieldsAdapterName,
                         cancellationToken)
                         .ConfigureAwait(false);
 
-                IEnumerable<string> enumerationValues = getEnumerationValuesResponse
-                    .EnumerationValuesResult
-                    .EnumerationValues;
+                aggregationFieldsAndTypes =
+                    this.ConvertMappingsResponseToFieldsAndTypes(
+                        getEnumerationMappingsResponse);
 
                 this.loggerWrapper.Info(
-                    $"Aggregation fields returned - " +
-                    $"{enumerationValues.Count()} in total.");
+                    $"Aggregation fields and types obtained - " +
+                    $"{aggregationFieldsAndTypes.Count} in total.");
 
-                this.aggregationFieldsCache.AggregationFields =
-                    enumerationValues;
+                this.aggregationFieldsCache.AggregationFieldsAndTypes =
+                    aggregationFieldsAndTypes;
             }
 
+            aggregationFieldsAndTypes =
+                this.aggregationFieldsCache.AggregationFieldsAndTypes;
+
             IEnumerable<string> aggregationFields =
-                this.aggregationFieldsCache.AggregationFields;
+                aggregationFieldsAndTypes.Keys.ToList();
 
             string parameterName = censusIdentifier.ParameterName;
             string parameterValue = censusIdentifier.ParameterValue;
@@ -152,7 +160,7 @@
             Dictionary<string, AggregateQuery> aggregateQueries =
                 getCensusRequest.AggregateQueries;
 
-            AssertFieldsAreSUpported(aggregationFields, aggregateQueries);
+            AssertFieldsAreSupported(aggregationFields, aggregateQueries);
 
             this.loggerWrapper.Debug(
                 $"Fetching {nameof(Census)} using {datasetQueryFile} and " +
@@ -183,7 +191,7 @@
             return toReturn;
         }
 
-        private static void AssertFieldsAreSUpported(
+        private static void AssertFieldsAreSupported(
             IEnumerable<string> aggregationFields,
             Dictionary<string, AggregateQuery> aggregateQueries)
         {
@@ -235,7 +243,10 @@
                 GetResultSetFieldNames(dbDataReader);
 
             IAggregator[] aggregators = aggregateQueries
-                .Select(x => this.aggregatorFactory.Create(resultSetFieldNames, x.Key, x.Value))
+                .Select(x => this.aggregatorFactory.Create(
+                    resultSetFieldNames,
+                    x.Key,
+                    x.Value))
                 .ToArray();
 
             this.loggerWrapper.Info(
@@ -278,6 +289,35 @@
             {
                 _Aggregations = aggregations.ToArray(),
             };
+
+            return toReturn;
+        }
+
+        private Dictionary<string, Type> ConvertMappingsResponseToFieldsAndTypes(
+            GetEnumerationMappingsResponse getEnumerationMappingsResponse)
+        {
+            Dictionary<string, Type> toReturn = null;
+
+            toReturn = getEnumerationMappingsResponse
+                .MappingsResult
+                .Mappings
+                .ToDictionary(
+                    x => x.Key,
+                    x =>
+                    {
+                        Type type = null;
+
+                        string typeStr = x.Value.FirstOrDefault();
+
+                        type = Type.GetType($"{nameof(System)}.{typeStr}");
+
+                        if (type == null)
+                        {
+                            // TODO: Throw exception.
+                        }
+
+                        return type;
+                    });
 
             return toReturn;
         }

@@ -23,7 +23,7 @@
     /// </summary>
     public class TranslationApiAdapter : ITranslationApiAdapter
     {
-        private const string GetEnumerationValuesPath = "./enumerations/{0}";
+        private const string GetEnumerationValuesPath = "./enumerations/{0}/{1}";
 
         private readonly ILoggerWrapper loggerWrapper;
         private readonly IRestClient restClient;
@@ -71,16 +71,18 @@
         }
 
         /// <inheritdoc />
-        public async Task<GetEnumerationValuesResponse> GetEnumerationValuesAsync(
+        public async Task<GetEnumerationMappingsResponse> GetEnumerationMappingsAsync(
             string enumerationName,
+            string adapterName,
             CancellationToken cancellationToken)
         {
-            GetEnumerationValuesResponse toReturn = null;
+            GetEnumerationMappingsResponse toReturn = null;
 
             string getEnumerationValuesPath = string.Format(
                 CultureInfo.InvariantCulture,
                 GetEnumerationValuesPath,
-                enumerationName);
+                enumerationName,
+                adapterName);
 
             Uri getEnumerationValuesUri = new Uri(
                 getEnumerationValuesPath,
@@ -95,8 +97,8 @@
 
             restRequest.AppendContext(spiExecutionContext);
 
-            IRestResponse<GetEnumerationValuesResponse> restResponse =
-                await this.restClient.ExecuteTaskAsync<GetEnumerationValuesResponse>(
+            IRestResponse restResponse =
+                await this.restClient.ExecuteTaskAsync(
                     restRequest,
                     cancellationToken)
                     .ConfigureAwait(false);
@@ -106,13 +108,17 @@
                 this.ParseErrorInformationThrowException(restResponse);
             }
 
-            toReturn = restResponse.Data;
+            string responseBody = restResponse.Content;
+
+            toReturn =
+                JsonConvert.DeserializeObject<GetEnumerationMappingsResponse>(
+                    responseBody);
 
             return toReturn;
         }
 
         private void ParseErrorInformationThrowException(
-            IRestResponse<GetEnumerationValuesResponse> restResponse)
+            IRestResponse restResponse)
         {
             this.loggerWrapper.Warning(
                 $"A non-successful status code was returned " +

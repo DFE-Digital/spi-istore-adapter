@@ -6,8 +6,21 @@
     /// <summary>
     /// Implements <see cref="ICensusProcessorSettingsProvider" />.
     /// </summary>
-    public class CensusProcessorSettingsProvider : ICensusProcessorSettingsProvider
+    public class CensusProcessorSettingsProvider
+        : ICensusProcessorSettingsProvider
     {
+        /// <inheritdoc />
+        public string AggregationFieldsAdapterName
+        {
+            get
+            {
+                string toReturn = Environment.GetEnvironmentVariable(
+                    "AggregationFieldsAdapterName");
+
+                return toReturn;
+            }
+        }
+
         /// <inheritdoc />
         public string AggregationFieldsEnumerationName
         {

@@ -197,6 +197,14 @@
 
                     break;
 
+                case DataOperator.IsNotNull:
+                    toReturn = actualUnboxedFieldValue != DBNull.Value;
+                    break;
+
+                case DataOperator.IsNull:
+                    toReturn = actualUnboxedFieldValue == DBNull.Value;
+                    break;
+
                 default:
                     throw new NotImplementedException(
                         $"Unsupported {nameof(DataOperator)}, " +

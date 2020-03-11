@@ -7,6 +7,7 @@
     using System.Linq;
     using Dfe.Spi.Common.Models;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.Models;
 
@@ -17,6 +18,7 @@
     {
         private readonly IEnumerable<string> resultSetFieldNames;
 
+        private readonly AggregationFieldsCache aggregationFieldsCache;
         private readonly string requestedQueryName;
         private readonly AggregateQuery aggregateQuery;
 
@@ -28,6 +30,9 @@
         /// <param name="resultSetFieldNames">
         /// A set of field names, obtained from the result set itself, upfront.
         /// </param>
+        /// <param name="aggregationFieldsCache">
+        /// An instance of <see cref="AggregationFieldsCache" />.
+        /// </param>
         /// <param name="requestedQueryName">
         /// The name of the originally requested query.
         /// </param>
@@ -36,10 +41,13 @@
         /// </param>
         public Aggregator(
             IEnumerable<string> resultSetFieldNames,
+            AggregationFieldsCache aggregationFieldsCache,
             string requestedQueryName,
             AggregateQuery aggregateQuery)
         {
             this.resultSetFieldNames = resultSetFieldNames;
+
+            this.aggregationFieldsCache = aggregationFieldsCache;
             this.requestedQueryName = requestedQueryName;
             this.aggregateQuery = aggregateQuery;
 
@@ -70,7 +78,7 @@
                 .Select(x => this.EvaluateDataFilter(dbDataReader, x))
                 .ToArray();
 
-            bool matchesFilter = queryResults.Any(x => x);
+            bool matchesFilter = queryResults.All(x => x);
 
             if (matchesFilter)
             {
@@ -92,7 +100,7 @@
             }
         }
 
-        private static DateTime UnboxDataFilterValue(string value)
+        private static DateTime UnboxDateTime(string value)
         {
             DateTime toReturn = DateTime.Parse(
                 value,
@@ -141,16 +149,19 @@
                         (actualFieldValue < betweenDates.Item2)
                             &&
                         (actualFieldValue > betweenDates.Item1);
+
                     break;
 
                 case DataOperator.Equals:
                     // We'll not unbox the SQL result field. We'll just take it
                     // as an object, and perform an equalities operator over
                     // it.
-                    // The string, however, we'll need to unbox.
-                    // This is dependant on the type, as directed by the
-                    // Translation Service.
-                    // TODO: ...
+                    // The string, however, we'll need to unbox, at least
+                    // into an object.
+                    object unboxedValue = this.UnboxFilterValue(field, value);
+
+                    toReturn = actualUnboxedFieldValue.Equals(unboxedValue);
+
                     break;
 
                 default:
@@ -181,10 +192,45 @@
                     $"\"2018-07-01T00:00:00Z\".");
             }
 
-            DateTime from = UnboxDataFilterValue(datePartsStr.First());
-            DateTime to = UnboxDataFilterValue(datePartsStr.Last());
+            DateTime from = UnboxDateTime(datePartsStr.First());
+            DateTime to = UnboxDateTime(datePartsStr.Last());
 
             toReturn = new Tuple<DateTime, DateTime>(from, to);
+
+            return toReturn;
+        }
+
+        private object UnboxFilterValue(string field, string value)
+        {
+            object toReturn = null;
+
+            Dictionary<string, Type> aggregationFieldsAndTypes =
+                this.aggregationFieldsCache.AggregationFieldsAndTypes;
+
+            Type fieldType = aggregationFieldsAndTypes[field];
+
+            string fieldTypeName = fieldType.Name;
+
+            switch (fieldTypeName)
+            {
+                case nameof(Int32):
+                    toReturn = int.Parse(value, CultureInfo.InvariantCulture);
+                    break;
+
+                case nameof(DateTime):
+                    toReturn = UnboxDateTime(value);
+                    break;
+
+                case nameof(String):
+                    // Easiest conversion ever.
+                    toReturn = value;
+                    break;
+
+                default:
+                    throw new NotImplementedException(
+                        $"The unboxing of type \"{fieldTypeName}\" needs " +
+                        $"to be implemented!");
+            }
 
             return toReturn;
         }

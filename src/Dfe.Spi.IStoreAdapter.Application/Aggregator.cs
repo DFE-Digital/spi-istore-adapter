@@ -205,6 +205,27 @@
                     toReturn = actualUnboxedFieldValue == DBNull.Value;
                     break;
 
+                case DataOperator.LessThan:
+                    unboxedValue = this.UnboxFilterValue(field, value);
+
+                    compareToResult = actualUnboxedFieldValueComparable
+                        .CompareTo(unboxedValue);
+
+                    toReturn = compareToResult == -1;
+                    break;
+
+                case DataOperator.LessThanOrEqualTo:
+                    unboxedValue = this.UnboxFilterValue(field, value);
+
+                    compareToResult = actualUnboxedFieldValueComparable
+                        .CompareTo(unboxedValue);
+
+                    toReturn =
+                        (compareToResult == 0)
+                            ||
+                        (compareToResult == -1);
+                    break;
+
                 default:
                     throw new NotImplementedException(
                         $"Unsupported {nameof(DataOperator)}, " +

@@ -1,8 +1,6 @@
 namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 {
     using System;
-    using System.IO;
-    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
@@ -12,9 +10,8 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Exceptions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
-    using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
-    using Dfe.Spi.Models;
+    using Dfe.Spi.Models.Entities;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.WebJobs;
@@ -166,33 +163,13 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 
             try
             {
-                // TODO: Wire up result to processor response, when the below
-                //       is removed.
                 GetCensusResponse getCensusResponse =
                     await this.censusProcessor.GetCensusAsync(
                         getCensusRequest,
                         cancellationToken)
                         .ConfigureAwait(false);
 
-                // TODO: Temporary stubbing - to be removed.
-                Aggregation[] aggregations = null;
-                if (getCensusRequest.AggregateQueries != null)
-                {
-                    aggregations = getCensusRequest
-                        .AggregateQueries
-                        .Select(x => new Aggregation()
-                        {
-                            Name = x.Key,
-                            Value = x.Key.GetHashCode(StringComparison.InvariantCulture),
-                        })
-                        .ToArray();
-                }
-
-                Models.Entities.Census census = new Models.Entities.Census()
-                {
-                    Name = $"Requested Census: Id {this.censusIdentifier}",
-                    _Aggregations = aggregations,
-                };
+                Census census = getCensusResponse.Census;
 
                 JsonSerializerSettings jsonSerializerSettings =
                     JsonConvert.DefaultSettings();

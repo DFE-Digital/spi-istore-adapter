@@ -168,6 +168,9 @@
                 cancellationToken)
                 .ConfigureAwait(false);
 
+            census.Name = $"Census results from " +
+                $"{datasetQueryFile.QueryConfiguration.DatabaseName}";
+
             this.loggerWrapper.Info(
                 $"Fetched {nameof(Census)}: {census} using " +
                 $"{datasetQueryFile} and supplied aggregate queries.");
@@ -205,15 +208,34 @@
             }
         }
 
+        private static List<string> GetResultSetFieldNames(
+            DbDataReader dbDataReader)
+        {
+            List<string> toReturn = new List<string>();
+
+            string fieldName = null;
+            for (int i = 0; i < dbDataReader.FieldCount; i++)
+            {
+                fieldName = dbDataReader.GetName(i);
+
+                toReturn.Add(fieldName);
+            }
+
+            return toReturn;
+        }
+
         private Census BuildCensusResults(
             Dictionary<string, AggregateQuery> aggregateQueries,
             DbDataReader dbDataReader)
         {
             Census toReturn = null;
 
+            // Extract the field names in the result set.
+            List<string> resultSetFieldNames =
+                GetResultSetFieldNames(dbDataReader);
+
             IAggregator[] aggregators = aggregateQueries
-                .Select(x => x.Value)
-                .Select(this.aggregatorFactory.Create)
+                .Select(x => this.aggregatorFactory.Create(resultSetFieldNames, x.Key, x.Value))
                 .ToArray();
 
             this.loggerWrapper.Info(
@@ -246,7 +268,7 @@
                 $"Quizzing {nameof(IAggregator)}s for results...");
 
             Aggregation[] aggregations = aggregators
-                .Select(x => x.Result)
+                .Select(x => x.GetResult())
                 .ToArray();
 
             this.loggerWrapper.Info(

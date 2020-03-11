@@ -71,7 +71,7 @@
 
             string query = datasetQueryFile.Query;
 
-            Census census = await this.ExecuteQueryAsync(
+            toReturn = await this.ExecuteQueryAsync(
                 aggregationFields,
                 aggregateQueries,
                 connectionString,
@@ -81,11 +81,6 @@
                 buildCensusResultsCallback,
                 cancellationToken)
                 .ConfigureAwait(false);
-
-            toReturn = new Census()
-            {
-                // Nothing, for now.
-            };
 
             return toReturn;
         }

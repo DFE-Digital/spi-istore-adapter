@@ -200,7 +200,7 @@
                     compareToResult = actualUnboxedFieldValueComparable
                         .CompareTo(unboxedValue);
 
-                    toReturn = compareToResult == 1;
+                    toReturn = compareToResult > 0;
 
                     break;
 
@@ -210,10 +210,7 @@
                     compareToResult = actualUnboxedFieldValueComparable
                         .CompareTo(unboxedValue);
 
-                    toReturn =
-                        (compareToResult == 0)
-                            ||
-                        (compareToResult == 1);
+                    toReturn = compareToResult >= 0;
 
                     break;
 
@@ -231,7 +228,7 @@
                     compareToResult = actualUnboxedFieldValueComparable
                         .CompareTo(unboxedValue);
 
-                    toReturn = compareToResult == -1;
+                    toReturn = compareToResult < 0;
                     break;
 
                 case DataOperator.LessThanOrEqualTo:
@@ -240,10 +237,7 @@
                     compareToResult = actualUnboxedFieldValueComparable
                         .CompareTo(unboxedValue);
 
-                    toReturn =
-                        (compareToResult == 0)
-                            ||
-                        (compareToResult == -1);
+                    toReturn = compareToResult <= 0;
                     break;
 
                 default:

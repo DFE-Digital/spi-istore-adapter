@@ -22,7 +22,6 @@
                   //
                   "enum": [
                     "Equals",
-                    "Contains",
                     "GreaterThan",
                     "GreaterThanOrEqualTo",
                     "LessThan",

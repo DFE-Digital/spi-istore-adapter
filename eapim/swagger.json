@@ -183,9 +183,6 @@
           "example": 400
         }
       }
-    },
-    "get-squashed-entity-response": {
-      "type": "object"
     }
   }
 }

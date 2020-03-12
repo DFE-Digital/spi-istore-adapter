@@ -120,6 +120,15 @@
   <data name="_1" xml:space="preserve">
     <value>The supplied body was either empty, or not well-formed JSON.</value>
   </data>
+  <data name="_10" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="_11" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="_12" xml:space="preserve">
+    <value>{0}</value>
+  </data>
   <data name="_2" xml:space="preserve">
     <value>The supplied body was well-formed JSON but it failed validation: {0}</value>
   </data>
@@ -127,15 +136,21 @@
     <value>Could not parse the requested id into a CensusIdentifier. The CensusIdentifier must follow the format: "&lt;DatasetQueryFileId&gt;-&lt;ParameterName&gt;-&lt;ParameterValue&gt;".</value>
   </data>
   <data name="_4" xml:space="preserve">
-    <value>A DatasetQueryFileNotFoundException was thrown: {0}</value>
+    <value>{0}</value>
   </data>
   <data name="_5" xml:space="preserve">
-    <value>An IncompleteDatasetQueryFileException was thrown: {0}</value>
+    <value>{0}</value>
   </data>
   <data name="_6" xml:space="preserve">
-    <value>A TranslationApiAdapterException was thrown: {0}</value>
+    <value>{0}</value>
   </data>
   <data name="_7" xml:space="preserve">
-    <value>An UnsupportedAggregateColumnRequestException was thrown: {0}</value>
+    <value>{0}</value>
+  </data>
+  <data name="_8" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="_9" xml:space="preserve">
+    <value>{0}</value>
   </data>
 </root>

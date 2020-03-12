@@ -4,6 +4,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Dfe.Spi.Common.Extensions;
     using Dfe.Spi.Common.Http.Server;
     using Dfe.Spi.Common.Http.Server.Definitions;
     using Dfe.Spi.Common.Logging.Definitions;
@@ -185,63 +186,66 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             }
             catch (DatasetQueryFileNotFoundException datasetQueryFileNotFoundException)
             {
-                string message = datasetQueryFileNotFoundException.Message;
-
-                this.loggerWrapper.Info(
-                    $"A {nameof(DatasetQueryFileNotFoundException)} was " +
-                    $"thrown: {message}");
-
-                toReturn =
-                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
-                        HttpStatusCode.NotFound,
-                        4,
-                        message);
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.NotFound,
+                    4,
+                    datasetQueryFileNotFoundException);
             }
             catch (IncompleteDatasetQueryFileException incompleteDatasetQueryFileException)
             {
-                string message = incompleteDatasetQueryFileException.Message;
-
-                this.loggerWrapper.Error(
-                    $"An {nameof(IncompleteDatasetQueryFileException)} was " +
-                    $"thrown: {message}",
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.ExpectationFailed,
+                    5,
                     incompleteDatasetQueryFileException);
-
-                toReturn =
-                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
-                        HttpStatusCode.UnprocessableEntity,
-                        5,
-                        message);
             }
             catch (TranslationApiAdapterException translationApiAdapterException)
             {
-                string message = translationApiAdapterException.Message;
-
-                this.loggerWrapper.Error(
-                    $"A {nameof(TranslationApiAdapterException)} was " +
-                    $"thrown: {message}",
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.FailedDependency,
+                    6,
                     translationApiAdapterException);
-
-                toReturn =
-                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
-                        HttpStatusCode.FailedDependency,
-                        6,
-                        message);
             }
             catch (UnsupportedAggregateColumnRequestException unsupportedAggregateColumnRequestException)
             {
-                string message = unsupportedAggregateColumnRequestException.Message;
-
-                this.loggerWrapper.Error(
-                    $"An " +
-                    $"{nameof(UnsupportedAggregateColumnRequestException)} " +
-                    $"was thrown: {message}",
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    7,
                     unsupportedAggregateColumnRequestException);
-
-                toReturn =
-                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
-                        HttpStatusCode.BadRequest,
-                        7,
-                        message);
+            }
+            catch (InvalidMappingTypeException invalidMappingTypeException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.ExpectationFailed,
+                    8,
+                    invalidMappingTypeException);
+            }
+            catch (SqlFieldValueUnboxingTypeException sqlFieldValueUnboxingTypeException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.ExpectationFailed,
+                    9,
+                    sqlFieldValueUnboxingTypeException);
+            }
+            catch (InvalidBetweenValueException invalidBetweenValueException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    10,
+                    invalidBetweenValueException);
+            }
+            catch (InvalidDateTimeFormatException invalidDateTimeFormatException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    11,
+                    invalidDateTimeFormatException);
+            }
+            catch (DataFilterValueUnboxingTypeException dataFilterValueUnboxingTypeException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    12,
+                    dataFilterValueUnboxingTypeException);
             }
 
             return toReturn;
@@ -265,6 +269,31 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                     ParameterValue = identifierParts[2],
                 };
             }
+
+            return toReturn;
+        }
+
+        private IActionResult GetErrorBody(
+            HttpStatusCode httpStatusCode,
+            int errorId,
+            Exception exception)
+        {
+            IActionResult toReturn = null;
+
+            string message = exception.Message;
+
+            Type exceptionType = exception.GetType();
+
+            this.loggerWrapper.Error(
+                $"An exception of type {exceptionType.Name} was thrown: " +
+                $"{message}",
+                exception);
+
+            toReturn =
+                this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                    httpStatusCode,
+                    errorId,
+                    message);
 
             return toReturn;
         }

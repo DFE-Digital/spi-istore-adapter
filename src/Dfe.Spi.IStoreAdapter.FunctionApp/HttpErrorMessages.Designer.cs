@@ -70,6 +70,33 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        internal static string _10 {
+            get {
+                return ResourceManager.GetString("_10", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        internal static string _11 {
+            get {
+                return ResourceManager.GetString("_11", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        internal static string _12 {
+            get {
+                return ResourceManager.GetString("_12", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The supplied body was well-formed JSON but it failed validation: {0}.
         /// </summary>
         internal static string _2 {
@@ -88,7 +115,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A DatasetQueryFileNotFoundException was thrown: {0}.
+        ///   Looks up a localized string similar to {0}.
         /// </summary>
         internal static string _4 {
             get {
@@ -97,7 +124,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An IncompleteDatasetQueryFileException was thrown: {0}.
+        ///   Looks up a localized string similar to {0}.
         /// </summary>
         internal static string _5 {
             get {
@@ -106,7 +133,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A TranslationApiAdapterException was thrown: {0}.
+        ///   Looks up a localized string similar to {0}.
         /// </summary>
         internal static string _6 {
             get {
@@ -115,11 +142,29 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An UnsupportedAggregateColumnRequestException was thrown: {0}.
+        ///   Looks up a localized string similar to {0}.
         /// </summary>
         internal static string _7 {
             get {
                 return ResourceManager.GetString("_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        internal static string _8 {
+            get {
+                return ResourceManager.GetString("_8", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        internal static string _9 {
+            get {
+                return ResourceManager.GetString("_9", resourceCulture);
             }
         }
     }

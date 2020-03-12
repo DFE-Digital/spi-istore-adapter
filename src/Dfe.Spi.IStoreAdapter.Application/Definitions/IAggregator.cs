@@ -1,5 +1,6 @@
 ﻿namespace Dfe.Spi.IStoreAdapter.Application.Definitions
 {
+    using System;
     using System.Data.Common;
     using Dfe.Spi.Models;
 
@@ -20,6 +21,10 @@
         /// <summary>
         /// Processes a single row, based on the instance's configuration.
         /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// The <see cref="IAggregator" /> was configured with an option that
+        /// is (currently) not supported.
+        /// </exception>
         /// <param name="dbDataReader">
         /// An instance of type <see cref="DbDataReader" />.
         /// </param>

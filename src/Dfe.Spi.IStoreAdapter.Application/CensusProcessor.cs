@@ -313,7 +313,7 @@
 
                         if (type == null)
                         {
-                            // TODO: Throw exception.
+                            throw new InvalidMappingTypeException(typeStr);
                         }
 
                         return type;

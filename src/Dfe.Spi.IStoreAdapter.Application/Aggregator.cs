@@ -8,6 +8,7 @@
     using Dfe.Spi.Common.Extensions;
     using Dfe.Spi.Common.Models;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Exceptions;
     using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.Models;
@@ -266,11 +267,7 @@
             if (datePartsStr.Length != 2)
             {
                 // TODO: Review exception type.
-                throw new FormatException(
-                    $"Between values need to contain 2 valid " +
-                    $"{nameof(DateTime)}s, seperated by the keyword " +
-                    $"\"to\". For example, \"2018-06-29T00:00:00Z\" to " +
-                    $"\"2018-07-01T00:00:00Z\".");
+                throw new InvalidBetweenValueException();
             }
 
             DateTime from = UnboxDateTime(datePartsStr.First());
@@ -290,27 +287,40 @@
 
             Type fieldType = aggregationFieldsAndTypes[field];
 
-            string fieldTypeName = fieldType.Name;
-
-            switch (fieldTypeName)
+            try
             {
-                case nameof(Int32):
-                    toReturn = int.Parse(value, CultureInfo.InvariantCulture);
-                    break;
+                string fieldTypeName = fieldType.Name;
 
-                case nameof(DateTime):
-                    toReturn = UnboxDateTime(value);
-                    break;
+                switch (fieldTypeName)
+                {
+                    case nameof(Int32):
+                        toReturn = int.Parse(
+                            value,
+                            CultureInfo.InvariantCulture);
+                        break;
 
-                case nameof(String):
-                    // Easiest conversion ever.
-                    toReturn = value;
-                    break;
+                    case nameof(DateTime):
+                        toReturn = UnboxDateTime(value);
+                        break;
 
-                default:
-                    throw new NotImplementedException(
-                        $"The unboxing of type \"{fieldTypeName}\" needs " +
-                        $"to be implemented!");
+                    case nameof(String):
+                        // Easiest conversion ever.
+                        toReturn = value;
+                        break;
+
+                    default:
+                        throw new NotImplementedException(
+                            $"The unboxing of type \"{fieldTypeName}\" " +
+                            $"needs to be implemented!");
+                }
+            }
+            catch (FormatException formatException)
+            {
+                throw new DataFilterValueUnboxingTypeException(
+                    field,
+                    fieldType,
+                    value,
+                    formatException);
             }
 
             return toReturn;
@@ -321,13 +331,18 @@
         {
             TUnboxedValue toReturn = default(TUnboxedValue);
 
-            if (unboxed is TUnboxedValue)
+            if (!(unboxed is DBNull))
             {
-                toReturn = (TUnboxedValue)unboxed;
-            }
-            else
-            {
-                // TODO: Throw exception.
+                if (unboxed is TUnboxedValue)
+                {
+                    toReturn = (TUnboxedValue)unboxed;
+                }
+                else
+                {
+                    throw new SqlFieldValueUnboxingTypeException(
+                        typeof(TUnboxedValue),
+                        unboxed.GetType());
+                }
             }
 
             return toReturn;

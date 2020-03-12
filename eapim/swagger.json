@@ -43,13 +43,31 @@
         ],
         "responses": {
           "200": {
-            "description": "The learning provider exists, and is part of the body of the response.",
+            "description": "The census exists, and the aggregations are included in the body of the response.",
             "schema": {
               "type": "object"
             }
           },
+          "400": {
+            "description": "A bad request was made. This could be a number of things - inspect body for more information.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
           "404": {
-            "description": "No learning provider exists for the given id.",
+            "description": "Could not find a Dataset Query File for the requested Dataset Query File ID.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
+          "424": {
+            "description": "A dependant API, the Translation API, returned a non-successful status code.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
+          "417": {
+            "description": "The requested Dataset Query File was incorrectly configured somehow - inspect body for more information.",
             "schema": {
               "$ref": "#/definitions/http-error-body"
             }

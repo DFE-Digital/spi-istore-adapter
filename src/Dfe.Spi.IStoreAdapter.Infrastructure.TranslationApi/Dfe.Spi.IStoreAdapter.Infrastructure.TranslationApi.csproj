@@ -2,12 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <DocumentationFile>Dfe.Spi.IStoreAdapter.Application.xml</DocumentationFile>
+    <DocumentationFile>Dfe.Spi.IStoreAdapter.Infrastructure.TranslatorApi.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Dfe.Spi.* -->
-    <PackageReference Include="Dfe.Spi.Common.Extensions" Version="1.1.0" />
+    <PackageReference Include="Dfe.Spi.Common.Http.Client" Version="1.0.9" />
+    
+    <!-- Other -->
+    <PackageReference Include="RestSharp" Version="106.6.10" />
 
     <!-- Development/Non-Runtime -->
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="All" />
@@ -25,5 +28,5 @@
   <PropertyGroup>
     <CodeAnalysisRuleSet>..\ca.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
+  
 </Project>

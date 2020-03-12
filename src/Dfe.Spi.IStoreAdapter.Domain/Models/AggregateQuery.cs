@@ -16,5 +16,14 @@
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets or sets the aggregate type.
+        /// </summary>
+        public AggregateType AggregateType
+        {
+            get;
+            set;
+        }
     }
 }

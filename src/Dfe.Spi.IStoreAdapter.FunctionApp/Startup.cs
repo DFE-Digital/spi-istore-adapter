@@ -9,11 +9,16 @@
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Definitions.Factories;
+    using Dfe.Spi.IStoreAdapter.Application.Definitions.SettingsProvider;
+    using Dfe.Spi.IStoreAdapter.Application.Factories;
+    using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.FunctionApp.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage;
     using Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer;
+    using Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
     using Microsoft.Azure.WebJobs.Logging;
     using Microsoft.Extensions.DependencyInjection;
@@ -49,9 +54,12 @@
             IServiceCollection serviceCollection =
                 functionsHostBuilder.Services;
 
+            AddAdapters(serviceCollection);
+            AddFactories(serviceCollection);
             AddLogging(serviceCollection);
             AddSettingsProviders(serviceCollection);
-            AddAdapters(serviceCollection);
+            AddManagers(serviceCollection);
+            AddProcessors(serviceCollection);
 
             HttpErrorBodyResultProvider httpErrorBodyResultProvider =
                 new HttpErrorBodyResultProvider(
@@ -60,9 +68,23 @@
 
             serviceCollection
                 .AddSingleton<IHttpErrorBodyResultProvider>(httpErrorBodyResultProvider)
-                .AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>()
-                .AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>())
-                .AddScoped<ICensusProcessor, CensusProcessor>();
+                .AddSingleton<AggregationFieldsCache>();
+        }
+
+        private static void AddAdapters(
+            IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                .AddScoped<ICensusAdapter, CensusAdapter>()
+                .AddScoped<IDatasetQueryFilesStorageAdapter, DatasetQueryFileStorageAdapter>()
+                .AddScoped<ITranslationApiAdapter, TranslationApiAdapter>();
+        }
+
+        private static void AddFactories(
+            IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                .AddScoped<IAggregatorFactory, AggregatorFactory>();
         }
 
         private static void AddLogging(IServiceCollection serviceCollection)
@@ -72,19 +94,26 @@
                 .AddScoped<ILoggerWrapper, LoggerWrapper>();
         }
 
+        private static void AddManagers(IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                .AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>()
+                .AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>());
+        }
+
+        private static void AddProcessors(IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                .AddScoped<ICensusProcessor, CensusProcessor>();
+        }
+
         private static void AddSettingsProviders(
             IServiceCollection serviceCollection)
         {
             serviceCollection
-                .AddSingleton<IDatasetQueryFilesStorageAdapterSettingsProvider, DatasetQueryFilesStorageAdapterSettingsProvider>();
-        }
-
-        private static void AddAdapters(
-            IServiceCollection serviceCollection)
-        {
-            serviceCollection
-                .AddScoped<IDatasetQueryFilesStorageAdapter, DatasetQueryFileStorageAdapter>()
-                .AddScoped<ICensusAdapter, CensusAdapter>();
+                .AddSingleton<ICensusProcessorSettingsProvider, CensusProcessorSettingsProvider>()
+                .AddSingleton<IDatasetQueryFilesStorageAdapterSettingsProvider, DatasetQueryFilesStorageAdapterSettingsProvider>()
+                .AddSingleton<ITranslationApiAdapterSettingsProvider, TranslationApiAdapterSettingsProvider>();
         }
 
         private static ILogger CreateILogger(IServiceProvider serviceProvider)

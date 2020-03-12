@@ -7,19 +7,25 @@
     using System.Data.SqlClient;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Dfe.Spi.Common.Logging.Definitions;
+    using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
+    using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
     using Dfe.Spi.Models.Entities;
 
     /// <summary>
-    /// Implements <see cref="ICensusAdapter" />.
+    /// Implements <see cref="ITranslationApiAdapter" />.
     /// </summary>
     public class CensusAdapter : ICensusAdapter
     {
+        private const string ColumnParameterFormat = "{0}Requested";
+
         private readonly ILoggerWrapper loggerWrapper;
 
         /// <summary>
@@ -36,10 +42,12 @@
 
         /// <inheritdoc />
         public async Task<Census> GetCensusAsync(
+            IEnumerable<string> aggregationFields,
             DatasetQueryFile datasetQueryFile,
             Dictionary<string, AggregateQuery> aggregateQueries,
             string parameterName,
             string parameterValue,
+            BuildCensusResultsCallback buildCensusResultsCallback,
             CancellationToken cancellationToken)
         {
             Census toReturn = null;
@@ -47,6 +55,12 @@
             if (datasetQueryFile == null)
             {
                 throw new ArgumentNullException(nameof(datasetQueryFile));
+            }
+
+            if (buildCensusResultsCallback == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(buildCensusResultsCallback));
             }
 
             QueryConfiguration queryConfiguration =
@@ -57,30 +71,37 @@
 
             string query = datasetQueryFile.Query;
 
-            Census census = await this.ExecuteQueryAsync(
+            toReturn = await this.ExecuteQueryAsync(
+                aggregationFields,
+                aggregateQueries,
                 connectionString,
                 query,
                 parameterName,
                 parameterValue,
+                buildCensusResultsCallback,
                 cancellationToken)
                 .ConfigureAwait(false);
-
-            toReturn = new Census()
-            {
-                // Nothing, for now.
-            };
 
             return toReturn;
         }
 
         private async Task<Census> ExecuteQueryAsync(
+            IEnumerable<string> aggregationFields,
+            Dictionary<string, AggregateQuery> aggregateQueries,
             string connectionString,
             string query,
             string parameterName,
             string parameterValue,
+            BuildCensusResultsCallback buildCensusResultsCallback,
             CancellationToken cancellationToken)
         {
             Census toReturn = null;
+
+            string[] requestedFields = aggregateQueries
+                .SelectMany(x => x.Value.DataFilters)
+                .Select(x => x.Field)
+                .Distinct()
+                .ToArray();
 
             Stopwatch stopwatch = new Stopwatch();
 
@@ -98,7 +119,7 @@
                     $"{sqlConnection.ClientConnectionId}).");
 
                 DbDataReader dbDataReader = null;
-                using (SqlCommand sqlCommand = this.GetSqlCommand(sqlConnection, query, parameterName, parameterValue))
+                using (SqlCommand sqlCommand = this.GetSqlCommand(sqlConnection, query, aggregationFields, requestedFields, parameterName, parameterValue))
                 {
                     stopwatch.Start();
 
@@ -122,26 +143,15 @@
                     this.loggerWrapper.Debug(
                         $"Building results from {nameof(SqlDataReader)}...");
 
-                    toReturn = this.BuildCensusResults(dbDataReader);
+                    toReturn = buildCensusResultsCallback(
+                        aggregateQueries,
+                        dbDataReader);
 
                     this.loggerWrapper.Info(
                         $"{nameof(Census)} constructed: {toReturn}. " +
                         $"Returning.");
                 }
             }
-
-            return toReturn;
-        }
-
-        private Census BuildCensusResults(DbDataReader dbDataReader)
-        {
-            Census toReturn = null;
-
-            // TODO: Build up aggregates, etc.
-            toReturn = new Census()
-            {
-                // Nothing for now.
-            };
 
             return toReturn;
         }
@@ -153,6 +163,8 @@
         private SqlCommand GetSqlCommand(
             SqlConnection sqlConnection,
             string query,
+            IEnumerable<string> allPossibleAggregationFields,
+            IEnumerable<string> requestedAggregationFields,
             string parameterName,
             string parameterValue)
         {
@@ -168,6 +180,33 @@
             {
                 CommandType = commandType,
             };
+
+            SqlParameter[] sqlParameters = allPossibleAggregationFields
+                .Select(x =>
+                {
+                    SqlParameter columnParameter = null;
+
+                    string columnParamName = string.Format(
+                        CultureInfo.InvariantCulture,
+                        ColumnParameterFormat,
+                        x);
+
+                    bool columnParamValue = requestedAggregationFields
+                        .Contains(x);
+
+                    columnParameter = new SqlParameter(
+                        columnParamName,
+                        columnParamValue);
+
+                    return columnParameter;
+                })
+                .ToArray();
+
+            this.loggerWrapper.Debug(
+                $"Adding {sqlParameters.Length} column requested " +
+                $"{nameof(SqlParameter)}s...");
+
+            toReturn.Parameters.AddRange(sqlParameters);
 
             SqlParameter sqlParameter = new SqlParameter(
                 parameterName,

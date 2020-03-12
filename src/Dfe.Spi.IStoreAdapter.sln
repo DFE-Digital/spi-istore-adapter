@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.IStoreAdapter.Domai
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage", "Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage\Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage.csproj", "{0ADB4978-7CC4-4D77-8A90-CFF9630520FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer", "Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer\Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer.csproj", "{BE73B1CA-301A-4112-BD79-ABE757E3EC9E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer", "Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer\Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer.csproj", "{BE73B1CA-301A-4112-BD79-ABE757E3EC9E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi", "Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi\Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi.csproj", "{10E93464-3639-490E-A78C-15FE8B8FC7EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{BE73B1CA-301A-4112-BD79-ABE757E3EC9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE73B1CA-301A-4112-BD79-ABE757E3EC9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE73B1CA-301A-4112-BD79-ABE757E3EC9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10E93464-3639-490E-A78C-15FE8B8FC7EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10E93464-3639-490E-A78C-15FE8B8FC7EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10E93464-3639-490E-A78C-15FE8B8FC7EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10E93464-3639-490E-A78C-15FE8B8FC7EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

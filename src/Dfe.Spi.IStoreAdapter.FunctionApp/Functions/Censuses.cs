@@ -1,18 +1,18 @@
 namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 {
     using System;
-    using System.IO;
-    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using Dfe.Spi.Common.Extensions;
     using Dfe.Spi.Common.Http.Server;
     using Dfe.Spi.Common.Http.Server.Definitions;
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
+    using Dfe.Spi.IStoreAdapter.Application.Exceptions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
-    using Dfe.Spi.IStoreAdapter.Domain;
-    using Dfe.Spi.Models;
+    using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
+    using Dfe.Spi.Models.Entities;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.WebJobs;
@@ -26,6 +26,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
+        private readonly IHttpSpiExecutionContextManager httpSpiExecutionContextManager;
         private readonly ILoggerWrapper loggerWrapper;
 
         private CensusIdentifier censusIdentifier;
@@ -54,6 +55,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         {
             this.censusProcessor = censusProcessor;
             this.httpErrorBodyResultProvider = httpErrorBodyResultProvider;
+            this.httpSpiExecutionContextManager = httpSpiExecutionContextManager;
             this.loggerWrapper = loggerWrapper;
         }
 
@@ -106,6 +108,12 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                         break;
 
                     case "GET":
+                        IHeaderDictionary headerDictionary =
+                            httpRequest.Headers;
+
+                        this.httpSpiExecutionContextManager.SetContext(
+                            headerDictionary);
+
                         toReturn = await this.ProcessWellFormedRequestAsync(
                             null,
                             cancellationToken)
@@ -164,33 +172,13 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 
             try
             {
-                // TODO: Wire up result to processor response, when the below
-                //       is removed.
                 GetCensusResponse getCensusResponse =
                     await this.censusProcessor.GetCensusAsync(
                         getCensusRequest,
                         cancellationToken)
                         .ConfigureAwait(false);
 
-                // TODO: Temporary stubbing - to be removed.
-                Aggregation[] aggregations = null;
-                if (getCensusRequest.AggregateQueries != null)
-                {
-                    aggregations = getCensusRequest
-                        .AggregateQueries
-                        .Select(x => new Aggregation()
-                        {
-                            Name = x.Key,
-                            Value = x.Key.GetHashCode(StringComparison.InvariantCulture),
-                        })
-                        .ToArray();
-                }
-
-                Models.Entities.Census census = new Models.Entities.Census()
-                {
-                    Name = $"Requested Census: Id {this.censusIdentifier}",
-                    _Aggregations = aggregations,
-                };
+                Census census = getCensusResponse.Census;
 
                 JsonSerializerSettings jsonSerializerSettings =
                     JsonConvert.DefaultSettings();
@@ -206,32 +194,66 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             }
             catch (DatasetQueryFileNotFoundException datasetQueryFileNotFoundException)
             {
-                string message = datasetQueryFileNotFoundException.Message;
-
-                this.loggerWrapper.Info(
-                    $"A {nameof(DatasetQueryFileNotFoundException)} was " +
-                    $"thrown: {message}");
-
-                toReturn =
-                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
-                        HttpStatusCode.NotFound,
-                        4,
-                        message);
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.NotFound,
+                    4,
+                    datasetQueryFileNotFoundException);
             }
             catch (IncompleteDatasetQueryFileException incompleteDatasetQueryFileException)
             {
-                string message = incompleteDatasetQueryFileException.Message;
-
-                this.loggerWrapper.Error(
-                    $"An {nameof(IncompleteDatasetQueryFileException)} was " +
-                    $"thrown: {message}",
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.ExpectationFailed,
+                    5,
                     incompleteDatasetQueryFileException);
-
-                toReturn =
-                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
-                        HttpStatusCode.UnprocessableEntity,
-                        5,
-                        message);
+            }
+            catch (TranslationApiAdapterException translationApiAdapterException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.FailedDependency,
+                    6,
+                    translationApiAdapterException);
+            }
+            catch (UnsupportedAggregateColumnRequestException unsupportedAggregateColumnRequestException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    7,
+                    unsupportedAggregateColumnRequestException);
+            }
+            catch (InvalidMappingTypeException invalidMappingTypeException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.ExpectationFailed,
+                    8,
+                    invalidMappingTypeException);
+            }
+            catch (SqlFieldValueUnboxingTypeException sqlFieldValueUnboxingTypeException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.ExpectationFailed,
+                    9,
+                    sqlFieldValueUnboxingTypeException);
+            }
+            catch (InvalidBetweenValueException invalidBetweenValueException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    10,
+                    invalidBetweenValueException);
+            }
+            catch (InvalidDateTimeFormatException invalidDateTimeFormatException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    11,
+                    invalidDateTimeFormatException);
+            }
+            catch (DataFilterValueUnboxingTypeException dataFilterValueUnboxingTypeException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    12,
+                    dataFilterValueUnboxingTypeException);
             }
 
             return toReturn;
@@ -255,6 +277,31 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                     ParameterValue = identifierParts[2],
                 };
             }
+
+            return toReturn;
+        }
+
+        private IActionResult GetErrorBody(
+            HttpStatusCode httpStatusCode,
+            int errorId,
+            Exception exception)
+        {
+            IActionResult toReturn = null;
+
+            string message = exception.Message;
+
+            Type exceptionType = exception.GetType();
+
+            this.loggerWrapper.Error(
+                $"An exception of type {exceptionType.Name} was thrown: " +
+                $"{message}",
+                exception);
+
+            toReturn =
+                this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
+                    httpStatusCode,
+                    errorId,
+                    message);
 
             return toReturn;
         }

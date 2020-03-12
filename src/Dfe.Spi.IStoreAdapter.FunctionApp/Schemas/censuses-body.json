@@ -22,7 +22,6 @@
                   //
                   "enum": [
                     "Equals",
-                    "Contains",
                     "GreaterThan",
                     "GreaterThanOrEqualTo",
                     "LessThan",
@@ -42,10 +41,17 @@
                 "operator"
               ]
             }
+          },
+          "aggregateType": {
+            "type": "string",
+            "enum": [
+              "Count"
+            ]
           }
         },
         "required": [
-          "dataFilters"
+          "dataFilters",
+          "aggregateType"
         ]
       }
     }

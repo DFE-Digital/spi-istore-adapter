@@ -55,6 +55,12 @@
     },
     "iStoreSqlConnectionString": {
       "type": "securestring"
+    },
+    "translationApiBaseUri": {
+      "type": "string"
+    },
+    "internalServicesSubscriptionKey": {
+      "type": "securestring"
     }
   },
   "variables": {
@@ -184,6 +190,22 @@
             {
               "name": "IStoreSqlConnectionString",
               "value": "[parameters('iStoreSqlConnectionString')]"
+            },
+            {
+              "name": "TranslationApiBaseUri",
+              "value": "[parameters('translationApiBaseUri')]"
+            },
+            {
+              "name": "TranslationApiSubscriptionKey",
+              "value": "[parameters('internalServicesSubscriptionKey')]"
+            },
+            {
+              "name": "AggregationFieldsAdapterName",
+              "value": "IStore"
+            },
+            {
+              "name": "AggregationFieldsEnumerationName",
+              "value": "CensusAggregationFields"
             }
           ],
           "ipSecurityRestrictions": [

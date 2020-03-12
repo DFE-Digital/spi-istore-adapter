@@ -10,14 +10,14 @@
   "paths": {
     "/censuses/{id}": {
       "get": {
-        "description": "Returns a single census, based on its id.",
+        "description": "Returns a single census, based on its id. Does not include aggregation information.",
         "operationId": "get-census",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "type": "string",
-            "description": "The id of the learning provider to return.",
+            "description": "The id of the census to return.",
             "required": true
           },
           {
@@ -60,12 +60,6 @@
               "$ref": "#/definitions/http-error-body"
             }
           },
-          "424": {
-            "description": "A dependant API, the Translation API, returned a non-successful status code.",
-            "schema": {
-              "$ref": "#/definitions/http-error-body"
-            }
-          },
           "417": {
             "description": "The requested Dataset Query File was incorrectly configured somehow - inspect body for more information.",
             "schema": {
@@ -75,23 +69,14 @@
         }
       },
       "post": {
-        "description": "Returns a single census, based on its id.",
+        "description": "Returns a single census, based on its id. Includes aggregation information.",
         "operationId": "post-census",
         "parameters": [
-          {
-            "in": "body",
-            "name": "Get Census Request",
-            "description": "Additional information used in querying the adapter, in particular around aggregations.",
-            "required": true,
-            "schema": {
-              "type": "object"
-            }
-          },
           {
             "in": "path",
             "name": "id",
             "type": "string",
-            "description": "The id of the learning provider to return.",
+            "description": "The id of the census to return.",
             "required": true
           },
           {
@@ -113,17 +98,43 @@
             "name": "X-External-Request-Id",
             "description": "An optional external request id. Used in logging.",
             "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "Get Census Request",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "The learning provider exists, and is part of the body of the response.",
+            "description": "The census exists, and the aggregations are included in the body of the response.",
             "schema": {
               "type": "object"
             }
           },
+          "400": {
+            "description": "A bad request was made. This could be a number of things - inspect body for more information.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
           "404": {
-            "description": "No learning provider exists for the given id.",
+            "description": "Could not find a Dataset Query File for the requested Dataset Query File ID.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
+          "424": {
+            "description": "A dependant API, the Translation API, returned a non-successful status code.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
+          "417": {
+            "description": "The requested Dataset Query File was incorrectly configured somehow - inspect body for more information.",
             "schema": {
               "$ref": "#/definitions/http-error-body"
             }
@@ -159,22 +170,19 @@
         "errorIdentifier": {
           "type": "string",
           "description": "An error identifier.",
-          "example": "SPI-ISA-2"
+          "example": "SPI-ISA-1"
         },
         "message": {
           "type": "string",
           "description": "A message describing the error.",
-          "example": "Unable to serve any requests - all adapters are unavailable."
+          "example": "The supplied body was either empty, or not well-formed JSON."
         },
         "statusCode": {
           "type": "integer",
           "description": "The status code thrown with the error.",
-          "example": 424
+          "example": 400
         }
       }
-    },
-    "get-squashed-entity-response": {
-      "type": "object"
     }
   }
 }

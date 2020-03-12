@@ -26,6 +26,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
+        private readonly IHttpSpiExecutionContextManager httpSpiExecutionContextManager;
         private readonly ILoggerWrapper loggerWrapper;
 
         private CensusIdentifier censusIdentifier;
@@ -54,6 +55,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         {
             this.censusProcessor = censusProcessor;
             this.httpErrorBodyResultProvider = httpErrorBodyResultProvider;
+            this.httpSpiExecutionContextManager = httpSpiExecutionContextManager;
             this.loggerWrapper = loggerWrapper;
         }
 
@@ -106,6 +108,12 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                         break;
 
                     case "GET":
+                        IHeaderDictionary headerDictionary =
+                            httpRequest.Headers;
+
+                        this.httpSpiExecutionContextManager.SetContext(
+                            headerDictionary);
+
                         toReturn = await this.ProcessWellFormedRequestAsync(
                             null,
                             cancellationToken)

@@ -121,60 +121,22 @@
                 $"Got {nameof(DatasetQueryFile)} for id " +
                 $"\"{datasetQueryFileId}\": {datasetQueryFile}.");
 
-            // Get an entire list of aggregation fields that we can use.
-            Dictionary<string, Type> aggregationFieldsAndTypes = null;
-            if (this.aggregationFieldsCache.AggregationFieldsAndTypes == null)
-            {
-                this.loggerWrapper.Debug(
-                    "Fetching available aggregation mappings from the " +
-                    "Translator API...");
-
-                GetEnumerationMappingsResponse getEnumerationMappingsResponse =
-                    await this.translationApiAdapter.GetEnumerationMappingsAsync(
-                        this.aggregationFieldsEnumerationName,
-                        this.aggregationFieldsAdapterName,
-                        cancellationToken)
-                        .ConfigureAwait(false);
-
-                aggregationFieldsAndTypes =
-                    this.ConvertMappingsResponseToFieldsAndTypes(
-                        getEnumerationMappingsResponse);
-
-                this.loggerWrapper.Info(
-                    $"Aggregation fields and types obtained - " +
-                    $"{aggregationFieldsAndTypes.Count} in total.");
-
-                this.aggregationFieldsCache.AggregationFieldsAndTypes =
-                    aggregationFieldsAndTypes;
-            }
-
-            aggregationFieldsAndTypes =
-                this.aggregationFieldsCache.AggregationFieldsAndTypes;
-
-            IEnumerable<string> aggregationFields =
-                aggregationFieldsAndTypes.Keys.ToList();
-
-            string parameterName = censusIdentifier.ParameterName;
-            string parameterValue = censusIdentifier.ParameterValue;
-
             Dictionary<string, AggregateQuery> aggregateQueries =
                 getCensusRequest.AggregateQueries;
 
-            AssertFieldsAreSupported(aggregationFields, aggregateQueries);
-
-            this.loggerWrapper.Debug(
-                $"Fetching {nameof(Census)} using {datasetQueryFile} and " +
-                $"supplied aggregate queries...");
-
-            Census census = await this.censusAdapter.GetCensusAsync(
-                aggregationFields,
-                datasetQueryFile,
-                aggregateQueries,
-                parameterName,
-                parameterValue,
-                this.BuildCensusResults,
-                cancellationToken)
-                .ConfigureAwait(false);
+            Census census = null;
+            if (aggregateQueries != null)
+            {
+                census = await this.GetCensusAggregates(
+                    getCensusRequest,
+                    datasetQueryFile,
+                    cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                census = new Census();
+            }
 
             census.Name = $"Census results from " +
                 $"{datasetQueryFile.QueryConfiguration.DatabaseName}";
@@ -318,6 +280,74 @@
 
                         return type;
                     });
+
+            return toReturn;
+        }
+
+        private async Task<Census> GetCensusAggregates(
+            GetCensusRequest getCensusRequest,
+            DatasetQueryFile datasetQueryFile,
+            CancellationToken cancellationToken)
+        {
+            Census toReturn = null;
+
+            CensusIdentifier censusIdentifier =
+                getCensusRequest.CensusIdentifier;
+
+            // Get an entire list of aggregation fields that we can use.
+            Dictionary<string, Type> aggregationFieldsAndTypes = null;
+            if (this.aggregationFieldsCache.AggregationFieldsAndTypes == null)
+            {
+                this.loggerWrapper.Debug(
+                    "Fetching available aggregation mappings from the " +
+                    "Translator API...");
+
+                GetEnumerationMappingsResponse getEnumerationMappingsResponse =
+                    await this.translationApiAdapter.GetEnumerationMappingsAsync(
+                        this.aggregationFieldsEnumerationName,
+                        this.aggregationFieldsAdapterName,
+                        cancellationToken)
+                        .ConfigureAwait(false);
+
+                aggregationFieldsAndTypes =
+                    this.ConvertMappingsResponseToFieldsAndTypes(
+                        getEnumerationMappingsResponse);
+
+                this.loggerWrapper.Info(
+                    $"Aggregation fields and types obtained - " +
+                    $"{aggregationFieldsAndTypes.Count} in total.");
+
+                this.aggregationFieldsCache.AggregationFieldsAndTypes =
+                    aggregationFieldsAndTypes;
+            }
+
+            aggregationFieldsAndTypes =
+                this.aggregationFieldsCache.AggregationFieldsAndTypes;
+
+            IEnumerable<string> aggregationFields =
+                aggregationFieldsAndTypes.Keys.ToList();
+
+            string parameterName = censusIdentifier.ParameterName;
+            string parameterValue = censusIdentifier.ParameterValue;
+
+            Dictionary<string, AggregateQuery> aggregateQueries =
+                getCensusRequest.AggregateQueries;
+
+            AssertFieldsAreSupported(aggregationFields, aggregateQueries);
+
+            this.loggerWrapper.Debug(
+                $"Fetching {nameof(Census)} using {datasetQueryFile} and " +
+                $"supplied aggregate queries...");
+
+            toReturn = await this.censusAdapter.GetCensusAsync(
+                aggregationFields,
+                datasetQueryFile,
+                aggregateQueries,
+                parameterName,
+                parameterValue,
+                this.BuildCensusResults,
+                cancellationToken)
+                .ConfigureAwait(false);
 
             return toReturn;
         }

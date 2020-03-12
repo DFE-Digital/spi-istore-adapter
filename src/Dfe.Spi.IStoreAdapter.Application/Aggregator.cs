@@ -5,6 +5,7 @@
     using System.Data.Common;
     using System.Globalization;
     using System.Linq;
+    using Dfe.Spi.Common.Extensions;
     using Dfe.Spi.Common.Models;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
     using Dfe.Spi.IStoreAdapter.Application.Models;
@@ -102,11 +103,8 @@
 
         private static DateTime UnboxDateTime(string value)
         {
-            DateTime toReturn = DateTime.Parse(
-                value,
-                CultureInfo.InvariantCulture);
+            DateTime toReturn = value.ToDateTime();
 
-            // TODO: Replace with Simon's incoming DateTime parsing function.
             return toReturn;
         }
 

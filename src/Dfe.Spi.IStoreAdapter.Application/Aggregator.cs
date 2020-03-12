@@ -160,6 +160,27 @@
 
                     break;
 
+                case DataOperator.In:
+                    // Split the string up, a comma seperated list.
+                    string[] parts = value.Split(
+                        new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries);
+
+                    bool[] atLeastOneEquals = parts
+                        .Select(x => this.EvaluateDataFilter(
+                            dbDataReader,
+                            new DataFilter()
+                            {
+                                Field = field,
+                                Operator = DataOperator.Equals,
+                                Value = x,
+                            }))
+                            .ToArray();
+
+                    toReturn = atLeastOneEquals.Any(x => x);
+
+                    break;
+
                 case DataOperator.Equals:
                     // We'll not unbox the SQL result field. We'll just take it
                     // as an object, and perform an equalities operator over

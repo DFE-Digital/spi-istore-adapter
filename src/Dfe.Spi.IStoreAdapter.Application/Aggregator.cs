@@ -302,6 +302,10 @@
                         toReturn = value;
                         break;
 
+                    case nameof(Boolean):
+                        toReturn = bool.Parse(value);
+                        break;
+
                     default:
                         throw new NotImplementedException(
                             $"The unboxing of type \"{fieldTypeName}\" " +

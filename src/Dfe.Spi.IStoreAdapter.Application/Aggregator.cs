@@ -293,6 +293,12 @@
                             CultureInfo.InvariantCulture);
                         break;
 
+                    case nameof(Int64):
+                        toReturn = long.Parse(
+                            value,
+                            CultureInfo.InvariantCulture);
+                        break;
+
                     case nameof(DateTime):
                         toReturn = UnboxDateTime(value);
                         break;
@@ -304,6 +310,18 @@
 
                     case nameof(Boolean):
                         toReturn = bool.Parse(value);
+                        break;
+
+                    case nameof(Decimal):
+                        toReturn = decimal.Parse(
+                            value,
+                            CultureInfo.InvariantCulture);
+                        break;
+
+                    case nameof(Byte):
+                        toReturn = byte.Parse(
+                            value,
+                            CultureInfo.InvariantCulture);
                         break;
 
                     default:

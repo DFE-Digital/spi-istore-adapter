@@ -97,6 +97,15 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        internal static string _13 {
+            get {
+                return ResourceManager.GetString("_13", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The supplied body was well-formed JSON but it failed validation: {0}.
         /// </summary>
         internal static string _2 {

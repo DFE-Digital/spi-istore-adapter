@@ -255,6 +255,13 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                     12,
                     dataFilterValueUnboxingTypeException);
             }
+            catch (UnsupportedSearchParameterException unsupportedSearchParameterException)
+            {
+                toReturn = this.GetErrorBody(
+                    HttpStatusCode.BadRequest,
+                    13,
+                    unsupportedSearchParameterException);
+            }
 
             return toReturn;
         }

@@ -194,6 +194,35 @@
             return toReturn;
         }
 
+        private static Dictionary<string, Type> ConvertMappingsResponseToFieldsAndTypes(
+            GetEnumerationMappingsResponse getEnumerationMappingsResponse)
+        {
+            Dictionary<string, Type> toReturn = null;
+
+            toReturn = getEnumerationMappingsResponse
+                .MappingsResult
+                .Mappings
+                .ToDictionary(
+                    x => x.Key,
+                    x =>
+                    {
+                        Type type = null;
+
+                        string typeStr = x.Value.FirstOrDefault();
+
+                        type = Type.GetType($"{nameof(System)}.{typeStr}");
+
+                        if (type == null)
+                        {
+                            throw new InvalidMappingTypeException(typeStr);
+                        }
+
+                        return type;
+                    });
+
+            return toReturn;
+        }
+
         private Census BuildCensusResults(
             Dictionary<string, AggregateQuery> aggregateQueries,
             DbDataReader dbDataReader)
@@ -255,35 +284,6 @@
             return toReturn;
         }
 
-        private Dictionary<string, Type> ConvertMappingsResponseToFieldsAndTypes(
-            GetEnumerationMappingsResponse getEnumerationMappingsResponse)
-        {
-            Dictionary<string, Type> toReturn = null;
-
-            toReturn = getEnumerationMappingsResponse
-                .MappingsResult
-                .Mappings
-                .ToDictionary(
-                    x => x.Key,
-                    x =>
-                    {
-                        Type type = null;
-
-                        string typeStr = x.Value.FirstOrDefault();
-
-                        type = Type.GetType($"{nameof(System)}.{typeStr}");
-
-                        if (type == null)
-                        {
-                            throw new InvalidMappingTypeException(typeStr);
-                        }
-
-                        return type;
-                    });
-
-            return toReturn;
-        }
-
         private async Task<Census> GetCensusAggregates(
             GetCensusRequest getCensusRequest,
             DatasetQueryFile datasetQueryFile,
@@ -310,7 +310,7 @@
                         .ConfigureAwait(false);
 
                 aggregationFieldsAndTypes =
-                    this.ConvertMappingsResponseToFieldsAndTypes(
+                    ConvertMappingsResponseToFieldsAndTypes(
                         getEnumerationMappingsResponse);
 
                 this.loggerWrapper.Info(

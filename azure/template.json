@@ -181,7 +181,7 @@
             },
             {
               "name": "DatasetQueryFileQueryFilename",
-              "value": "query.sql"
+              "value": "aggregate-pupils.sql"
             },
             {
               "name": "DatasetQueryFileConfigFilename",

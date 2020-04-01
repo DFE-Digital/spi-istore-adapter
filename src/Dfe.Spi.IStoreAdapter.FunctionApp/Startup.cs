@@ -111,6 +111,7 @@
             IServiceCollection serviceCollection)
         {
             serviceCollection
+                .AddSingleton<ICensusAdapterSettingsProvider, CensusAdapterSettingsProvider>()
                 .AddSingleton<ICensusProcessorSettingsProvider, CensusProcessorSettingsProvider>()
                 .AddSingleton<IDatasetQueryFilesStorageAdapterSettingsProvider, DatasetQueryFilesStorageAdapterSettingsProvider>()
                 .AddSingleton<ITranslationApiAdapterSettingsProvider, TranslationApiAdapterSettingsProvider>();

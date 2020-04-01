@@ -206,6 +206,10 @@
             {
               "name": "AggregationFieldsEnumerationName",
               "value": "CensusAggregationFields"
+            },
+            {
+              "name": "SupportedSearchParameterNames",
+              "value": "LearningProvider,LocalAuthorityNumber"
             }
           ],
           "ipSecurityRestrictions": [

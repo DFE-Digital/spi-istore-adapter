@@ -14,6 +14,7 @@
     using Dfe.Spi.Common.Logging.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
+    using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
@@ -28,16 +29,32 @@
 
         private readonly ILoggerWrapper loggerWrapper;
 
+        private readonly IEnumerable<string> supportedParameterNames;
+
         /// <summary>
         /// Initialises a new instance of the <see cref="CensusAdapter" />
         /// class.
         /// </summary>
+        /// <param name="censusAdapterSettingsProvider">
+        /// An instance of type <see cref="ICensusAdapterSettingsProvider" />.
+        /// </param>
         /// <param name="loggerWrapper">
         /// An instance of type <see cref="ILoggerWrapper" />.
         /// </param>
-        public CensusAdapter(ILoggerWrapper loggerWrapper)
+        public CensusAdapter(
+            ICensusAdapterSettingsProvider censusAdapterSettingsProvider,
+            ILoggerWrapper loggerWrapper)
         {
+            if (censusAdapterSettingsProvider == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(censusAdapterSettingsProvider));
+            }
+
             this.loggerWrapper = loggerWrapper;
+
+            this.supportedParameterNames =
+                censusAdapterSettingsProvider.SupportedSearchParameterNames;
         }
 
         /// <inheritdoc />
@@ -208,15 +225,28 @@
 
             toReturn.Parameters.AddRange(sqlParameters);
 
-            SqlParameter sqlParameter = new SqlParameter(
-                parameterName,
-                parameterValue);
+            // Now update the param, that's in a predefined list.
+            sqlParameters = this.supportedParameterNames
+                .Select(x => new SqlParameter(x, DBNull.Value))
+                .ToArray();
+
+            SqlParameter sqlParameter = sqlParameters
+                .SingleOrDefault(x => x.ParameterName == parameterName);
+
+            if (sqlParameter == null)
+            {
+                throw new UnsupportedSearchParameterException(
+                    parameterName,
+                    this.supportedParameterNames);
+            }
+
+            sqlParameter.Value = parameterValue;
 
             this.loggerWrapper.Debug(
                 $"Setting {nameof(SqlParameter)}: {sqlParameter} on " +
                 $"{nameof(SqlCommand)}...");
 
-            toReturn.Parameters.Add(sqlParameter);
+            toReturn.Parameters.AddRange(sqlParameters);
 
             return toReturn;
         }

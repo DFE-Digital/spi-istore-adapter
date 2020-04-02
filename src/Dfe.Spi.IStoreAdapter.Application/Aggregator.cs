@@ -125,6 +125,10 @@
             {
                 actualUnboxedFieldValue = dbDataReader[field];
             }
+            else
+            {
+                actualUnboxedFieldValue = DBNull.Value;
+            }
 
             IComparable actualUnboxedFieldValueComparable =
                 actualUnboxedFieldValue as IComparable;
@@ -195,22 +199,30 @@
                     break;
 
                 case DataOperator.GreaterThan:
-                    unboxedValue = this.UnboxFilterValue(field, value);
 
-                    compareToResult = actualUnboxedFieldValueComparable
-                        .CompareTo(unboxedValue);
+                    if (actualUnboxedFieldValueComparable != null)
+                    {
+                        unboxedValue = this.UnboxFilterValue(field, value);
 
-                    toReturn = compareToResult > 0;
+                        compareToResult = actualUnboxedFieldValueComparable
+                            .CompareTo(unboxedValue);
+
+                        toReturn = compareToResult > 0;
+                    }
 
                     break;
 
                 case DataOperator.GreaterThanOrEqualTo:
-                    unboxedValue = this.UnboxFilterValue(field, value);
 
-                    compareToResult = actualUnboxedFieldValueComparable
-                        .CompareTo(unboxedValue);
+                    if (actualUnboxedFieldValueComparable != null)
+                    {
+                        unboxedValue = this.UnboxFilterValue(field, value);
 
-                    toReturn = compareToResult >= 0;
+                        compareToResult = actualUnboxedFieldValueComparable
+                            .CompareTo(unboxedValue);
+
+                        toReturn = compareToResult >= 0;
+                    }
 
                     break;
 
@@ -223,21 +235,31 @@
                     break;
 
                 case DataOperator.LessThan:
-                    unboxedValue = this.UnboxFilterValue(field, value);
 
-                    compareToResult = actualUnboxedFieldValueComparable
-                        .CompareTo(unboxedValue);
+                    if (actualUnboxedFieldValueComparable != null)
+                    {
+                        unboxedValue = this.UnboxFilterValue(field, value);
 
-                    toReturn = compareToResult < 0;
+                        compareToResult = actualUnboxedFieldValueComparable
+                            .CompareTo(unboxedValue);
+
+                        toReturn = compareToResult < 0;
+                    }
+
                     break;
 
                 case DataOperator.LessThanOrEqualTo:
-                    unboxedValue = this.UnboxFilterValue(field, value);
 
-                    compareToResult = actualUnboxedFieldValueComparable
-                        .CompareTo(unboxedValue);
+                    if (actualUnboxedFieldValueComparable != null)
+                    {
+                        unboxedValue = this.UnboxFilterValue(field, value);
 
-                    toReturn = compareToResult <= 0;
+                        compareToResult = actualUnboxedFieldValueComparable
+                            .CompareTo(unboxedValue);
+
+                        toReturn = compareToResult <= 0;
+                    }
+
                     break;
 
                 default:

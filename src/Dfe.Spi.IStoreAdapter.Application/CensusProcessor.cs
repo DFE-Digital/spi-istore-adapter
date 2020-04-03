@@ -210,7 +210,7 @@
 
                         string typeStr = x.Value.FirstOrDefault();
 
-                        type = Type.GetType($"{nameof(System)}.{typeStr}");
+                        type = Type.GetType(typeStr);
 
                         if (type == null)
                         {

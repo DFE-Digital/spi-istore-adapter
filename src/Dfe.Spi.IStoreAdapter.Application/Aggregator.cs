@@ -5,6 +5,7 @@
     using System.Data.Common;
     using System.Globalization;
     using System.Linq;
+    using System.Xml;
     using Dfe.Spi.Common.Extensions;
     using Dfe.Spi.Common.Models;
     using Dfe.Spi.IStoreAdapter.Application.Definitions;
@@ -18,6 +19,8 @@
     /// </summary>
     public class Aggregator : IAggregator
     {
+        private const string ArraysXmlRootName = "Root";
+
         private readonly IEnumerable<string> resultSetFieldNames;
 
         private readonly AggregationFieldsCache aggregationFieldsCache;
@@ -130,8 +133,72 @@
                 actualUnboxedFieldValue = DBNull.Value;
             }
 
+            // Is the column we're quizzing an array? If so, we need to do some
+            // trickery.
+            Dictionary<string, Type> aggregationFieldsAndTypes =
+                this.aggregationFieldsCache.AggregationFieldsAndTypes;
+
+            Type fieldType = aggregationFieldsAndTypes[field];
+
+            if (fieldType.IsArray)
+            {
+                // Then the actualUnboxedFieldValue should be XML.
+                // If it's not, we need to throw an exception.
+                XmlDocument xmlDocument = new XmlDocument();
+
+                // XML comes out as a string...
+                // It wont have a root element, though.
+                string actualUnboxedFieldValueStr =
+                    actualUnboxedFieldValue.ToString();
+
+                // The XML will look like:
+                // <FieldName>value</FieldName>
+                // <FieldName>value</FieldName>
+                // ... so on, and so forth...
+                // Let's give it a root to work with. Can be anything.
+                // Just means XmlDocument is happy.
+                actualUnboxedFieldValueStr =
+                    $"<{ArraysXmlRootName}>{actualUnboxedFieldValueStr}</{ArraysXmlRootName}>";
+
+                // TODO: Handle the case where what we get back isn't XML.
+                xmlDocument.LoadXml(actualUnboxedFieldValueStr);
+
+                // Now we have XML loaded. This has a set of values in it.
+                IEnumerable<object> typedArrayValues = xmlDocument
+                    .SelectNodes($"//{ArraysXmlRootName}/{field}")
+                    .Cast<XmlElement>()
+                    .Select(x => x.InnerText)
+                    .Select(x => this.UnboxStringValue(field, x));
+
+                // We have a set of (unboxed) field values.
+                // If one of these evaluates to true, then we're good.
+                IEnumerable<bool> evaluations = typedArrayValues
+                    .Select(x => this.EvaluateDataFilter(dbDataReader, dataFilter, x));
+
+                toReturn = evaluations.Where(x => x).Any();
+            }
+            else
+            {
+                toReturn = this.EvaluateDataFilter(
+                    dbDataReader,
+                    dataFilter,
+                    actualUnboxedFieldValue);
+            }
+
+            return toReturn;
+        }
+
+        private bool EvaluateDataFilter(
+            DbDataReader dbDataReader,
+            DataFilter dataFilter,
+            object actualUnboxedFieldValue)
+        {
+            bool toReturn = false;
+
+            string field = dataFilter.Field;
+
             IComparable actualUnboxedFieldValueComparable =
-                actualUnboxedFieldValue as IComparable;
+               actualUnboxedFieldValue as IComparable;
 
             // For reference, IComparable.CompareTo will return:
             // -1: Invoking item is smaller than the passed in item.
@@ -192,7 +259,7 @@
                     // it.
                     // The string, however, we'll need to unbox, at least
                     // into an object.
-                    unboxedValue = this.UnboxFilterValue(field, value);
+                    unboxedValue = this.UnboxStringValue(field, value);
 
                     toReturn = actualUnboxedFieldValue.Equals(unboxedValue);
 
@@ -202,7 +269,7 @@
 
                     if (actualUnboxedFieldValueComparable != null)
                     {
-                        unboxedValue = this.UnboxFilterValue(field, value);
+                        unboxedValue = this.UnboxStringValue(field, value);
 
                         compareToResult = actualUnboxedFieldValueComparable
                             .CompareTo(unboxedValue);
@@ -216,7 +283,7 @@
 
                     if (actualUnboxedFieldValueComparable != null)
                     {
-                        unboxedValue = this.UnboxFilterValue(field, value);
+                        unboxedValue = this.UnboxStringValue(field, value);
 
                         compareToResult = actualUnboxedFieldValueComparable
                             .CompareTo(unboxedValue);
@@ -238,7 +305,7 @@
 
                     if (actualUnboxedFieldValueComparable != null)
                     {
-                        unboxedValue = this.UnboxFilterValue(field, value);
+                        unboxedValue = this.UnboxStringValue(field, value);
 
                         compareToResult = actualUnboxedFieldValueComparable
                             .CompareTo(unboxedValue);
@@ -252,7 +319,7 @@
 
                     if (actualUnboxedFieldValueComparable != null)
                     {
-                        unboxedValue = this.UnboxFilterValue(field, value);
+                        unboxedValue = this.UnboxStringValue(field, value);
 
                         compareToResult = actualUnboxedFieldValueComparable
                             .CompareTo(unboxedValue);
@@ -294,7 +361,7 @@
             return toReturn;
         }
 
-        private object UnboxFilterValue(string field, string value)
+        private object UnboxStringValue(string field, string value)
         {
             object toReturn = null;
 
@@ -302,6 +369,15 @@
                 this.aggregationFieldsCache.AggregationFieldsAndTypes;
 
             Type fieldType = aggregationFieldsAndTypes[field];
+
+            // If this is an array, then the datatype still applies; need the
+            // underlying type.
+            bool isArray = fieldType.IsArray;
+
+            if (isArray)
+            {
+                fieldType = fieldType.GetElementType();
+            }
 
             try
             {

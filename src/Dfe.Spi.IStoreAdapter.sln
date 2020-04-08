@@ -15,6 +15,26 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.IStoreAdapter.Infra
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi", "Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi\Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi.csproj", "{10E93464-3639-490E-A78C-15FE8B8FC7EE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{B13D5429-5572-4F9C-9700-905D30A61C09}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{91C11B25-9C5B-47A8-BC3E-571094805E57}"
+ProjectSection(SolutionItems) = preProject
+	..\pipelines\azure-pipelines.yml = ..\pipelines\azure-pipelines.yml
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EAPIM", "EAPIM", "{9EC0804B-A660-4EE9-BFD9-49773107415D}"
+ProjectSection(SolutionItems) = preProject
+	..\eapim\named-values.csv = ..\eapim\named-values.csv
+	..\eapim\oauth.xml = ..\eapim\oauth.xml
+	..\eapim\policy.xml = ..\eapim\policy.xml
+	..\eapim\swagger.json = ..\eapim\swagger.json
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Release", "Release", "{6FB784D3-EE58-408F-AF7C-459E6EE4C5EE}"
+ProjectSection(SolutionItems) = preProject
+	..\azure\template.json = ..\azure\template.json
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,5 +71,10 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55A7A6BE-9E4C-4414-8D72-6F7BEDEECAD1}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{91C11B25-9C5B-47A8-BC3E-571094805E57} = {B13D5429-5572-4F9C-9700-905D30A61C09}
+		{9EC0804B-A660-4EE9-BFD9-49773107415D} = {B13D5429-5572-4F9C-9700-905D30A61C09}
+		{6FB784D3-EE58-408F-AF7C-459E6EE4C5EE} = {B13D5429-5572-4F9C-9700-905D30A61C09}
 	EndGlobalSection
 EndGlobal

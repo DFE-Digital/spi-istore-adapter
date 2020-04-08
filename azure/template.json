@@ -120,7 +120,7 @@
       "location": "[resourceGroup().location]",
       "kind": "functionapp",
       "dependsOn": [
-        "[resourceId(variables('sharedResourceGroupName'), 'Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
       "properties": {
         "serverFarmId": "[resourceId(variables('sharedResourceGroupName'), 'Microsoft.Web/serverfarms', variables('servicePlanName'))]",

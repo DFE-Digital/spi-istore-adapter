@@ -385,6 +385,18 @@
 
                 switch (fieldTypeName)
                 {
+                    case nameof(Byte):
+                        toReturn = byte.Parse(
+                            value,
+                            CultureInfo.InvariantCulture);
+                        break;
+
+                    case nameof(Int16):
+                        toReturn = short.Parse(
+                            value,
+                            CultureInfo.InvariantCulture);
+                        break;
+
                     case nameof(Int32):
                         toReturn = int.Parse(
                             value,
@@ -393,6 +405,12 @@
 
                     case nameof(Int64):
                         toReturn = long.Parse(
+                            value,
+                            CultureInfo.InvariantCulture);
+                        break;
+
+                    case nameof(Decimal):
+                        toReturn = decimal.Parse(
                             value,
                             CultureInfo.InvariantCulture);
                         break;
@@ -408,18 +426,6 @@
 
                     case nameof(Boolean):
                         toReturn = bool.Parse(value);
-                        break;
-
-                    case nameof(Decimal):
-                        toReturn = decimal.Parse(
-                            value,
-                            CultureInfo.InvariantCulture);
-                        break;
-
-                    case nameof(Byte):
-                        toReturn = byte.Parse(
-                            value,
-                            CultureInfo.InvariantCulture);
                         break;
 
                     default:

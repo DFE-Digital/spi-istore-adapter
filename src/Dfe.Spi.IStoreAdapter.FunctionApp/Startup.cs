@@ -15,16 +15,22 @@
     using Dfe.Spi.IStoreAdapter.Application.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions;
     using Dfe.Spi.IStoreAdapter.Domain.Definitions.SettingsProviders;
+    using Dfe.Spi.IStoreAdapter.FunctionApp.Definitions.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.FunctionApp.SettingsProviders;
     using Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage;
     using Dfe.Spi.IStoreAdapter.Infrastructure.SqlServer;
     using Dfe.Spi.IStoreAdapter.Infrastructure.TranslationApi;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+    using Microsoft.Azure.KeyVault;
+    using Microsoft.Azure.Services.AppAuthentication;
     using Microsoft.Azure.WebJobs.Logging;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Configuration.AzureKeyVault;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
+    using static Microsoft.Azure.Services.AppAuthentication.AzureServiceTokenProvider;
 
     /// <summary>
     /// Functions startup class.
@@ -55,6 +61,7 @@
                 functionsHostBuilder.Services;
 
             AddAdapters(serviceCollection);
+            AddConfigurationProvider(serviceCollection);
             AddFactories(serviceCollection);
             AddLogging(serviceCollection);
             AddSettingsProviders(serviceCollection);
@@ -78,6 +85,12 @@
                 .AddScoped<ICensusAdapter, CensusAdapter>()
                 .AddScoped<IDatasetQueryFilesStorageAdapter, DatasetQueryFileStorageAdapter>()
                 .AddScoped<ITranslationApiAdapter, TranslationApiAdapter>();
+        }
+
+        private static void AddConfigurationProvider(
+            IServiceCollection serviceCollection)
+        {
+            serviceCollection.AddSingleton(BuildConfiguration);
         }
 
         private static void AddFactories(
@@ -114,7 +127,8 @@
                 .AddSingleton<ICensusAdapterSettingsProvider, CensusAdapterSettingsProvider>()
                 .AddSingleton<ICensusProcessorSettingsProvider, CensusProcessorSettingsProvider>()
                 .AddSingleton<IDatasetQueryFilesStorageAdapterSettingsProvider, DatasetQueryFilesStorageAdapterSettingsProvider>()
-                .AddSingleton<ITranslationApiAdapterSettingsProvider, TranslationApiAdapterSettingsProvider>();
+                .AddSingleton<ITranslationApiAdapterSettingsProvider, TranslationApiAdapterSettingsProvider>()
+                .AddSingleton<IStartupSettingsProvider, StartupSettingsProvider>();
         }
 
         private static ILogger CreateILogger(IServiceProvider serviceProvider)
@@ -128,6 +142,52 @@
                 nameof(Dfe.Spi.IStoreAdapter));
 
             toReturn = loggerFactory.CreateLogger(categoryName);
+
+            return toReturn;
+        }
+
+        [SuppressMessage(
+            "Microsoft.Reliability",
+            "CA2000",
+            Justification = "Disoposing of object may impact functionality. Setting up provider as outlined in: https://docs.microsoft.com/en-us/aspnet/core/security/key-vault-configuration?view=aspnetcore-3.1#use-managed-identities-for-azure-resources")]
+        private static IConfiguration BuildConfiguration(
+            IServiceProvider serviceProvider)
+        {
+            IConfiguration toReturn = null;
+
+            IStartupSettingsProvider startupSettingsProvider =
+                serviceProvider.GetService<IStartupSettingsProvider>();
+
+            string keyVaultInstanceName =
+                startupSettingsProvider.KeyVaultInstanceName;
+
+            string vault =
+                $"https://{keyVaultInstanceName}.vault.azure.net/";
+
+            ConfigurationBuilder configurationBuilder =
+                new ConfigurationBuilder();
+
+            AzureServiceTokenProvider azureServiceTokenProvider =
+                new AzureServiceTokenProvider();
+
+            TokenCallback keyVaultTokenCallback =
+                azureServiceTokenProvider.KeyVaultTokenCallback;
+
+            KeyVaultClient.AuthenticationCallback authenticationCallback =
+                new KeyVaultClient.AuthenticationCallback(keyVaultTokenCallback);
+
+            KeyVaultClient keyVaultClient = new KeyVaultClient(
+                authenticationCallback);
+
+            DefaultKeyVaultSecretManager defaultKeyVaultSecretManager =
+                new DefaultKeyVaultSecretManager();
+
+            configurationBuilder.AddAzureKeyVault(
+                vault,
+                keyVaultClient,
+                defaultKeyVaultSecretManager);
+
+            toReturn = configurationBuilder.Build();
 
             return toReturn;
         }

@@ -33,6 +33,12 @@
       "maxLength": 2,
       "defaultValue": "01"
     },
+    "keyVaultInstance": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 2,
+      "defaultValue": "01"
+    },
     "vNetInstance": {
       "type": "string",
       "minLength": 2,
@@ -76,6 +82,7 @@
     "functionAppName": "[concat(variables('namePrefix'), '-', parameters('appName'), '-fa-01')]",
     "functionAppId": "[concat(resourceGroup().id,'/providers/','Microsoft.Web/sites/', variables('functionAppName'))]",
     "appInsightsName": "[concat(variables('namePrefix'), '-ai-', parameters('appInsightsInstance'))]",
+    "keyVaultName": "[concat(variables('namePrefix'), '-shared-kv-', parameters('keyVaultInstance'))]",
     "sharedResourceGroupName": "[concat(variables('namePrefix'), '-shared')]",
     "servicePlanName": "[concat(variables('namePrefix'), '-shared-asp-', parameters('servicePlanInstance'))]",
     "corePrefix": "[concat(variables('namePrefix'), '-core')]",
@@ -179,8 +186,8 @@
               "value": "config.json"
             },
             {
-              "name": "IStoreSqlConnectionString",
-              "value": "[parameters('iStoreSqlConnectionString')]"
+              "name": "KeyVaultInstanceName",
+              "value": "[variables('keyVaultName')]"
             },
             {
               "name": "TranslationApiBaseUri",

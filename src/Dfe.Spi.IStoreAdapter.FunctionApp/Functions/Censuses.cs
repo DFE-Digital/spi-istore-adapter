@@ -83,14 +83,6 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         {
             IActionResult toReturn = null;
 
-            // TODO: REMOVE
-            if (Startup.StartupException != null)
-            {
-                this.loggerWrapper.Error("The startup exception is...", Startup.StartupException);
-
-                throw Startup.StartupException;
-            }
-
             if (httpRequest == null)
             {
                 throw new ArgumentNullException(nameof(httpRequest));
@@ -187,6 +179,14 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             CancellationToken cancellationToken)
         {
             IActionResult toReturn = null;
+
+            // TODO: REMOVE
+            if (Startup.StartupException != null)
+            {
+                this.loggerWrapper.Error("The startup exception is...", Startup.StartupException);
+
+                throw Startup.StartupException;
+            }
 
             if (getCensusRequest == null)
             {

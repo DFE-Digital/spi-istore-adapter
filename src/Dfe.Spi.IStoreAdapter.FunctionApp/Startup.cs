@@ -162,47 +162,48 @@
             IConfiguration toReturn = null;
 
             ConfigurationBuilder configurationBuilder =
-                new ConfigurationBuilder();
-
-            // Go to environment variables first...
-            configurationBuilder.AddEnvironmentVariables();
-
-            IStartupSettingsProvider startupSettingsProvider =
-                serviceProvider.GetService<IStartupSettingsProvider>();
-
-            string keyVaultInstanceName =
-                startupSettingsProvider.KeyVaultInstanceName;
-
-            if (!string.IsNullOrEmpty(keyVaultInstanceName))
-            {
-                string vault =
-                    $"https://{keyVaultInstanceName}.vault.azure.net/";
-
-                AzureServiceTokenProvider azureServiceTokenProvider =
-                    new AzureServiceTokenProvider();
-
-                TokenCallback keyVaultTokenCallback =
-                    azureServiceTokenProvider.KeyVaultTokenCallback;
-
-                KeyVaultClient.AuthenticationCallback authenticationCallback =
-                    new KeyVaultClient.AuthenticationCallback(
-                        keyVaultTokenCallback);
-
-                KeyVaultClient keyVaultClient = new KeyVaultClient(
-                    authenticationCallback);
-
-                DefaultKeyVaultSecretManager defaultKeyVaultSecretManager =
-                    new DefaultKeyVaultSecretManager();
-
-                // Otherwise, KeyVault.
-                configurationBuilder.AddAzureKeyVault(
-                    vault,
-                    keyVaultClient,
-                    defaultKeyVaultSecretManager);
-            }
+new ConfigurationBuilder();
 
             try
             {
+                // Go to environment variables first...
+                configurationBuilder.AddEnvironmentVariables();
+
+                IStartupSettingsProvider startupSettingsProvider =
+                    serviceProvider.GetService<IStartupSettingsProvider>();
+
+                string keyVaultInstanceName =
+                    startupSettingsProvider.KeyVaultInstanceName;
+
+                if (!string.IsNullOrEmpty(keyVaultInstanceName))
+                {
+                    string vault =
+                        $"https://{keyVaultInstanceName}.vault.azure.net/";
+
+                    AzureServiceTokenProvider azureServiceTokenProvider =
+                        new AzureServiceTokenProvider();
+
+                    TokenCallback keyVaultTokenCallback =
+                        azureServiceTokenProvider.KeyVaultTokenCallback;
+
+                    KeyVaultClient.AuthenticationCallback authenticationCallback =
+                        new KeyVaultClient.AuthenticationCallback(
+                            keyVaultTokenCallback);
+
+                    KeyVaultClient keyVaultClient = new KeyVaultClient(
+                        authenticationCallback);
+
+                    DefaultKeyVaultSecretManager defaultKeyVaultSecretManager =
+                        new DefaultKeyVaultSecretManager();
+
+                    // Otherwise, KeyVault.
+                    configurationBuilder.AddAzureKeyVault(
+                        vault,
+                        keyVaultClient,
+                        defaultKeyVaultSecretManager);
+                }
+
+
                 try
                 {
                     toReturn = configurationBuilder.Build();

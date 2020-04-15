@@ -40,12 +40,6 @@
     {
         private const string SystemErrorIdentifier = "ISA";
 
-        public static Exception StartupException
-        {
-            get;
-            set;
-        }
-
         /// <inheritdoc />
         public override void Configure(
             IFunctionsHostBuilder functionsHostBuilder)
@@ -162,78 +156,61 @@
             IConfiguration toReturn = null;
 
             ConfigurationBuilder configurationBuilder =
-new ConfigurationBuilder();
+                new ConfigurationBuilder();
+
+            // Go to environment variables first...
+            configurationBuilder.AddEnvironmentVariables();
+
+            IStartupSettingsProvider startupSettingsProvider =
+                serviceProvider.GetService<IStartupSettingsProvider>();
+
+            string keyVaultInstanceName =
+                startupSettingsProvider.KeyVaultInstanceName;
+
+            if (!string.IsNullOrEmpty(keyVaultInstanceName))
+            {
+                string vault =
+                    $"https://{keyVaultInstanceName}.vault.azure.net/";
+
+                AzureServiceTokenProvider azureServiceTokenProvider =
+                    new AzureServiceTokenProvider();
+
+                TokenCallback keyVaultTokenCallback =
+                    azureServiceTokenProvider.KeyVaultTokenCallback;
+
+                KeyVaultClient.AuthenticationCallback authenticationCallback =
+                    new KeyVaultClient.AuthenticationCallback(
+                        keyVaultTokenCallback);
+
+                KeyVaultClient keyVaultClient = new KeyVaultClient(
+                    authenticationCallback);
+
+                DefaultKeyVaultSecretManager defaultKeyVaultSecretManager =
+                    new DefaultKeyVaultSecretManager();
+
+                // Otherwise, KeyVault.
+                configurationBuilder.AddAzureKeyVault(
+                    vault,
+                    keyVaultClient,
+                    defaultKeyVaultSecretManager);
+            }
 
             try
             {
-                // Go to environment variables first...
-                configurationBuilder.AddEnvironmentVariables();
-
-                IStartupSettingsProvider startupSettingsProvider =
-                    serviceProvider.GetService<IStartupSettingsProvider>();
-
-                string keyVaultInstanceName =
-                    startupSettingsProvider.KeyVaultInstanceName;
-
-                if (!string.IsNullOrEmpty(keyVaultInstanceName))
-                {
-                    string vault =
-                        $"https://{keyVaultInstanceName}.vault.azure.net/";
-
-                    AzureServiceTokenProvider azureServiceTokenProvider =
-                        new AzureServiceTokenProvider();
-
-                    TokenCallback keyVaultTokenCallback =
-                        azureServiceTokenProvider.KeyVaultTokenCallback;
-
-                    KeyVaultClient.AuthenticationCallback authenticationCallback =
-                        new KeyVaultClient.AuthenticationCallback(
-                            keyVaultTokenCallback);
-
-                    KeyVaultClient keyVaultClient = new KeyVaultClient(
-                        authenticationCallback);
-
-                    DefaultKeyVaultSecretManager defaultKeyVaultSecretManager =
-                        new DefaultKeyVaultSecretManager();
-
-                    // Otherwise, KeyVault.
-                    configurationBuilder.AddAzureKeyVault(
-                        vault,
-                        keyVaultClient,
-                        defaultKeyVaultSecretManager);
-                }
-
-
-                try
-                {
-                    toReturn = configurationBuilder.Build();
-                }
-                catch (AzureServiceTokenProviderException azureServiceTokenProviderException)
-                {
-                    throw new Exception(
-                        $"This is likely happening because you're debugging, " +
-                        $"and you haven't used the Azure CLI 2.0 tools to 'az " +
-                        $"login'. Because KeyVault uses Managed Service " +
-                        $"Identities, you need to do this first. If you'd " +
-                        $"rather fall back to environment variables only, make " +
-                        $"the setting value for " +
-                        $"{nameof(IStartupSettingsProvider.KeyVaultInstanceName)} " +
-                        $"null (or just omit it completely).",
-                        azureServiceTokenProviderException);
-                }
-            }
-            catch (Exception exception)
-            {
-                StartupException = exception;
-
-
-                configurationBuilder =
-                    new ConfigurationBuilder();
-
-                // Go to environment variables first...
-                configurationBuilder.AddEnvironmentVariables();
-
                 toReturn = configurationBuilder.Build();
+            }
+            catch (AzureServiceTokenProviderException azureServiceTokenProviderException)
+            {
+                throw new Exception(
+                    $"This is likely happening because you're debugging, " +
+                    $"and you haven't used the Azure CLI 2.0 tools to 'az " +
+                    $"login'. Because KeyVault uses Managed Service " +
+                    $"Identities, you need to do this first. If you'd " +
+                    $"rather fall back to environment variables only, make " +
+                    $"the setting value for " +
+                    $"{nameof(IStartupSettingsProvider.KeyVaultInstanceName)} " +
+                    $"null (or just omit it completely).",
+                    azureServiceTokenProviderException);
             }
 
             return toReturn;

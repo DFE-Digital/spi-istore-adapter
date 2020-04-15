@@ -112,6 +112,29 @@
             return toReturn;
         }
 
+        private static Tuple<DateTime, DateTime> UnboxBetweenDataFilterValue(
+            string value)
+        {
+            Tuple<DateTime, DateTime> toReturn = null;
+
+            string[] datePartsStr = value.Split(
+                new string[] { " to " },
+                StringSplitOptions.RemoveEmptyEntries);
+
+            if (datePartsStr.Length != 2)
+            {
+                // TODO: Review exception type.
+                throw new InvalidBetweenValueException();
+            }
+
+            DateTime from = UnboxDateTime(datePartsStr.First());
+            DateTime to = UnboxDateTime(datePartsStr.Last());
+
+            toReturn = new Tuple<DateTime, DateTime>(from, to);
+
+            return toReturn;
+        }
+
         private bool EvaluateDataFilter(
             DbDataReader dbDataReader,
             DataFilter dataFilter)
@@ -223,7 +246,7 @@
 
                     // The input DateTimes also need to be DateTimes.
                     Tuple<DateTime, DateTime> betweenDates =
-                        this.UnboxBetweenDataFilterValue(value);
+                        UnboxBetweenDataFilterValue(value);
 
                     toReturn =
                         (actualFieldValue < betweenDates.Item2)
@@ -334,29 +357,6 @@
                         $"Unsupported {nameof(DataOperator)}, " +
                         $"\"{dataOperator}\"! This needs implementing!");
             }
-
-            return toReturn;
-        }
-
-        private Tuple<DateTime, DateTime> UnboxBetweenDataFilterValue(
-            string value)
-        {
-            Tuple<DateTime, DateTime> toReturn = null;
-
-            string[] datePartsStr = value.Split(
-                new string[] { " to " },
-                StringSplitOptions.RemoveEmptyEntries);
-
-            if (datePartsStr.Length != 2)
-            {
-                // TODO: Review exception type.
-                throw new InvalidBetweenValueException();
-            }
-
-            DateTime from = UnboxDateTime(datePartsStr.First());
-            DateTime to = UnboxDateTime(datePartsStr.Last());
-
-            toReturn = new Tuple<DateTime, DateTime>(from, to);
 
             return toReturn;
         }

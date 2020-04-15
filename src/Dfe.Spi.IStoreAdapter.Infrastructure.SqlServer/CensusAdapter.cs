@@ -19,6 +19,7 @@
     using Dfe.Spi.IStoreAdapter.Domain.Models;
     using Dfe.Spi.IStoreAdapter.Domain.Models.DatasetQueryFiles;
     using Dfe.Spi.Models.Entities;
+    using Microsoft.Extensions.Configuration;
 
     /// <summary>
     /// Implements <see cref="ITranslationApiAdapter" />.
@@ -27,6 +28,7 @@
     {
         private const string ColumnParameterFormat = "{0}Requested";
 
+        private readonly IConfiguration configuration;
         private readonly ILoggerWrapper loggerWrapper;
 
         private readonly IEnumerable<string> supportedParameterNames;
@@ -38,11 +40,15 @@
         /// <param name="censusAdapterSettingsProvider">
         /// An instance of type <see cref="ICensusAdapterSettingsProvider" />.
         /// </param>
+        /// <param name="configuration">
+        /// An instance of type <see cref="IConfiguration" />.
+        /// </param>
         /// <param name="loggerWrapper">
         /// An instance of type <see cref="ILoggerWrapper" />.
         /// </param>
         public CensusAdapter(
             ICensusAdapterSettingsProvider censusAdapterSettingsProvider,
+            IConfiguration configuration,
             ILoggerWrapper loggerWrapper)
         {
             if (censusAdapterSettingsProvider == null)
@@ -51,6 +57,7 @@
                     nameof(censusAdapterSettingsProvider));
             }
 
+            this.configuration = configuration;
             this.loggerWrapper = loggerWrapper;
 
             this.supportedParameterNames =
@@ -262,8 +269,8 @@
                 $"Reading environment variable " +
                 $"\"{connectionStringEnvironmentVariable}\"...");
 
-            string serverConnectionString = Environment.GetEnvironmentVariable(
-                connectionStringEnvironmentVariable);
+            string serverConnectionString =
+                this.configuration[connectionStringEnvironmentVariable];
 
             this.loggerWrapper.Info(
                 $"{nameof(serverConnectionString)} = " +

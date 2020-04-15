@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <!-- Microsoft -->
-    <PackageReference Include="Dfe.Spi.Common.AzureStorage" Version="1.0.1" />
+    <PackageReference Include="Dfe.Spi.Common.AzureStorage" Version="1.0.4" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.1" />
 
     <!-- Development/Non-Runtime -->

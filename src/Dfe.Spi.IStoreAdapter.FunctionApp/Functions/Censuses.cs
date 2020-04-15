@@ -96,6 +96,8 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             // Parse and validate the id to a CensusIdentifier.
             this.censusIdentifier = ParseIdentifier(id);
 
+            FunctionRunContext functionRunContext = new FunctionRunContext();
+
             if (this.censusIdentifier != null)
             {
                 switch (httpRequest.Method)
@@ -103,6 +105,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                     case "POST":
                         toReturn = await this.ValidateAndRunAsync(
                             httpRequest,
+                            functionRunContext,
                             cancellationToken)
                             .ConfigureAwait(false);
                         break;
@@ -116,6 +119,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 
                         toReturn = await this.ProcessWellFormedRequestAsync(
                             null,
+                            functionRunContext,
                             cancellationToken)
                             .ConfigureAwait(false);
                         break;
@@ -133,7 +137,8 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         }
 
         /// <inheritdoc />
-        protected override HttpErrorBodyResult GetMalformedErrorResponse()
+        protected override HttpErrorBodyResult GetMalformedErrorResponse(
+            FunctionRunContext functionRunContext)
         {
             HttpErrorBodyResult toReturn =
                 this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
@@ -145,9 +150,20 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 
         /// <inheritdoc />
         protected override HttpErrorBodyResult GetSchemaValidationResponse(
-            string message)
+            JsonSchemaValidationException jsonSchemaValidationException,
+            FunctionRunContext functionRunContext)
         {
-            HttpErrorBodyResult toReturn =
+            HttpErrorBodyResult toReturn = null;
+
+            if (jsonSchemaValidationException == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(jsonSchemaValidationException));
+            }
+
+            string message = jsonSchemaValidationException.Message;
+
+            toReturn =
                 this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
                     HttpStatusCode.BadRequest,
                     2,
@@ -159,6 +175,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <inheritdoc />
         protected async override Task<IActionResult> ProcessWellFormedRequestAsync(
             GetCensusRequest getCensusRequest,
+            FunctionRunContext functionRunContext,
             CancellationToken cancellationToken)
         {
             IActionResult toReturn = null;

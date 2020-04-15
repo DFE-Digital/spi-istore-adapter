@@ -12,6 +12,7 @@
             doesn't support later versions.
             https://github.com/dotnet/runtime/issues/27966
     -->
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
 
     <!-- Development/Non-Runtime -->

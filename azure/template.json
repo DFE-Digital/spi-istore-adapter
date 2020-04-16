@@ -249,7 +249,7 @@
       "type": "string"
     },
     "principalId": {
-      "value": "[reference(resourceId('Microsoft.Web/sites/', variables('functionAppName'), '2019-08-01', 'Full').identity.principalId)]",
+      "value": "[reference(resourceId('Microsoft.Web/sites/', variables('functionAppName')), '2019-08-01', 'Full').identity.principalId)]",
       "type": "string"
     }
   }

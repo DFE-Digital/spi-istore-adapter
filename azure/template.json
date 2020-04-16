@@ -59,9 +59,6 @@
     "datasetQueryFileStorageContainerName": {
       "type": "string"
     },
-    "iStoreSqlConnectionString": {
-      "type": "securestring"
-    },
     "translationApiBaseUri": {
       "type": "string"
     },

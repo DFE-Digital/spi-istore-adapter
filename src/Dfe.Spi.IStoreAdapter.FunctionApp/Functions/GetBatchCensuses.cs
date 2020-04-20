@@ -1,3 +1,9 @@
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Dfe.Spi.Common.Models;
+using Dfe.Spi.IStoreAdapter.Domain.Models;
+
 namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 {
     using System;
@@ -21,7 +27,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     /// <summary>
     /// Entry class for the <c>GetBatchCensuses</c> function.
     /// </summary>
-    public class GetBatchCensuses : FunctionsBase<GetCensusesRequest>
+    public class GetBatchCensuses : FunctionsBase<GetCensusesHttpRequest>
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
@@ -117,14 +123,20 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
 
         /// <inheritdoc />
         protected override async Task<IActionResult> ProcessWellFormedRequestAsync(
-            GetCensusesRequest request, 
+            GetCensusesHttpRequest request, 
             FunctionRunContext runContext, 
             CancellationToken cancellationToken)
         {
             try
             {
+                var censusRequest = new GetCensusesRequest
+                {
+                    CensusIdentifiers = request.Identifiers.Select(ParseIdentifier).ToArray(),
+                    AggregateQueries = request.AggregateQueries,
+                };
+                
                 var response = await this.censusProcessor.GetCensusesAsync(
-                    request,
+                    censusRequest,
                     cancellationToken);
                 
                 var jsonSerializerSettings = JsonConvert.DefaultSettings();
@@ -205,6 +217,30 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             }
         }
 
+        
+        
+        private static CensusIdentifier ParseIdentifier(
+            string censusIdentifierStr)
+        {
+            CensusIdentifier toReturn = null;
+
+            string[] identifierParts = censusIdentifierStr.Split(
+                '-',
+                StringSplitOptions.RemoveEmptyEntries);
+
+            if (identifierParts.Length == 3)
+            {
+                toReturn = new CensusIdentifier()
+                {
+                    DatasetQueryFileId = identifierParts[0],
+                    ParameterName = identifierParts[1],
+                    ParameterValue = identifierParts[2],
+                };
+            }
+
+            return toReturn;
+        }
+
         private IActionResult GetErrorBody(
             HttpStatusCode httpStatusCode,
             int errorId,
@@ -228,6 +264,31 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
                     message);
 
             return toReturn;
+        }
+    }
+    
+    public class GetCensusesHttpRequest : RequestResponseBase
+    {
+        /// <summary>
+        /// Gets or sets an array of identifiers
+        /// </summary>
+        public string[] Identifiers
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the aggregate queries.
+        /// </summary>
+        [SuppressMessage(
+            "Microsoft.Usage",
+            "CA2227",
+            Justification = "This is a DTO.")]
+        public Dictionary<string, AggregateQuery> AggregateQueries
+        {
+            get;
+            set;
         }
     }
 }

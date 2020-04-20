@@ -142,6 +142,68 @@
         }
       }
     },
+    "/censuses": {
+      "post": {
+        "description": "Returns an array of census, based on specified id.",
+        "operationId": "post-censuses",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "description": "Bearer token authentication.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-Internal-Request-Id",
+            "type": "string",
+            "description": "An internal request id. Should be a vaild guid.",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-External-Request-Id",
+            "description": "An optional external request id. Used in logging.",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "Get Censuses Request",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The census exists, and the aggregations are included in the body of the response.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "A bad request was made. This could be a number of things - inspect body for more information.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
+          "404": {
+            "description": "Could not find a Dataset Query File for the requested Dataset Query File ID.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          },
+          "417": {
+            "description": "The requested Dataset Query File was incorrectly configured somehow - inspect body for more information.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          }
+        }
+      }
+    },
     "/HeartBeat": {
       "get": {
         "description": "Standard diagnostics method, used to test the health of the facade's underlying system.",

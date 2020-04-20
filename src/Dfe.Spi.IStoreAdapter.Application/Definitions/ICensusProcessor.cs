@@ -24,5 +24,21 @@
         Task<GetCensusResponse> GetCensusAsync(
             GetCensusRequest getCensusRequest,
             CancellationToken cancellationToken);
+        
+        /// <summary>
+        /// The get censuses processor entry method.
+        /// </summary>
+        /// <param name="getCensusesRequest">
+        /// An instance of <see cref="GetCensusesRequest" />.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// An instance of <see cref="CancellationToken" />.
+        /// </param>
+        /// <returns>
+        /// An instance of <see cref="GetCensusesResponse" />.
+        /// </returns>
+        Task<GetCensusesResponse> GetCensusesAsync(
+            GetCensusesRequest getCensusesRequest,
+            CancellationToken cancellationToken);
     }
 }

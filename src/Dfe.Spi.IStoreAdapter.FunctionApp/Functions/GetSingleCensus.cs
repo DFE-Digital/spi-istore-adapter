@@ -22,7 +22,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     /// <summary>
     /// Entry class for the <c>censuses</c> function.
     /// </summary>
-    public class Censuses : FunctionsBase<GetCensusRequest>
+    public class GetSingleCensus : FunctionsBase<GetCensusRequest>
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
@@ -32,7 +32,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         private CensusIdentifier censusIdentifier;
 
         /// <summary>
-        /// Initialises a new instance of the <see cref="Censuses" /> class.
+        /// Initialises a new instance of the <see cref="GetSingleCensus" /> class.
         /// </summary>
         /// <param name="censusProcessor">
         /// An instance of type <see cref="ICensusProcessor" />.
@@ -46,7 +46,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <param name="loggerWrapper">
         /// An instance of type <see cref="ILoggerWrapper" />.
         /// </param>
-        public Censuses(
+        public GetSingleCensus(
             ICensusProcessor censusProcessor,
             IHttpErrorBodyResultProvider httpErrorBodyResultProvider,
             IHttpSpiExecutionContextManager httpSpiExecutionContextManager,
@@ -74,7 +74,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <returns>
         /// An instance of type <see cref="IActionResult" />.
         /// </returns>
-        [FunctionName("censuses")]
+        [FunctionName(nameof(GetSingleCensus))]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "GET", "POST", Route = "censuses/{id}")]
             HttpRequest httpRequest,

@@ -153,6 +153,34 @@
             return toReturn;
         }
 
+        /// <inheritdoc />
+        public async Task<GetCensusesResponse> GetCensusesAsync(
+            GetCensusesRequest getCensusesRequest,
+            CancellationToken cancellationToken)
+        {
+            var censuses = new Census[getCensusesRequest.CensusIdentifiers.Length];
+            
+            for (var i = 0; i < censuses.Length; i++)
+            {
+                var singleRequest = new GetCensusRequest
+                {
+                    CensusIdentifier = getCensusesRequest.CensusIdentifiers[i],
+                    AggregateQueries = getCensusesRequest.AggregateQueries,
+                };
+                
+                var singleResponse = await GetCensusAsync(singleRequest, cancellationToken);
+                
+                censuses[i] = singleResponse.Census;
+            }
+
+            return new GetCensusesResponse
+            {
+                Censuses = censuses,
+            };
+        }
+
+        
+        
         private static void AssertFieldsAreSupported(
             IEnumerable<string> aggregationFields,
             Dictionary<string, AggregateQuery> aggregateQueries)

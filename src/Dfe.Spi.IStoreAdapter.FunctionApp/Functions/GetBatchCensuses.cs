@@ -12,17 +12,16 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
     using Dfe.Spi.IStoreAdapter.Application.Exceptions;
     using Dfe.Spi.IStoreAdapter.Application.Models.Processors;
     using Dfe.Spi.IStoreAdapter.Domain.Exceptions;
-    using Dfe.Spi.Models.Entities;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.Http;
+    using Microsoft.AspNetCore.Http;
     using Newtonsoft.Json;
-
+    
     /// <summary>
-    /// Entry class for the <c>censuses</c> function.
+    /// Entry class for the <c>GetBatchCensuses</c> function.
     /// </summary>
-    public class Censuses : FunctionsBase<GetCensusRequest>
+    public class GetBatchCensuses : FunctionsBase<GetCensusesRequest>
     {
         private readonly ICensusProcessor censusProcessor;
         private readonly IHttpErrorBodyResultProvider httpErrorBodyResultProvider;
@@ -32,7 +31,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         private CensusIdentifier censusIdentifier;
 
         /// <summary>
-        /// Initialises a new instance of the <see cref="Censuses" /> class.
+        /// Initialises a new instance of the <see cref="GetSingleCensus" /> class.
         /// </summary>
         /// <param name="censusProcessor">
         /// An instance of type <see cref="ICensusProcessor" />.
@@ -46,7 +45,7 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <param name="loggerWrapper">
         /// An instance of type <see cref="ILoggerWrapper" />.
         /// </param>
-        public Censuses(
+        public GetBatchCensuses(
             ICensusProcessor censusProcessor,
             IHttpErrorBodyResultProvider httpErrorBodyResultProvider,
             IHttpSpiExecutionContextManager httpSpiExecutionContextManager,
@@ -58,15 +57,12 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
             this.httpSpiExecutionContextManager = httpSpiExecutionContextManager;
             this.loggerWrapper = loggerWrapper;
         }
-
+        
         /// <summary>
-        /// Entry method for the <c>censuses</c> function.
+        /// Entry method for the <c>GetBatchCensuses</c> function.
         /// </summary>
         /// <param name="httpRequest">
         /// An instance of <see cref="HttpContext" />.
-        /// </param>
-        /// <param name="id">
-        /// The id of the requested census.
         /// </param>
         /// <param name="cancellationToken">
         /// An instance of <see cref="CancellationToken" />.
@@ -74,66 +70,13 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         /// <returns>
         /// An instance of type <see cref="IActionResult" />.
         /// </returns>
-        [FunctionName("censuses")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "GET", "POST", Route = "censuses/{id}")]
+        [FunctionName(nameof(GetBatchCensuses))]
+        public async Task<IActionResult> RunAsync(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "censuses")]
             HttpRequest httpRequest,
-            string id,
             CancellationToken cancellationToken)
         {
-            IActionResult toReturn = null;
-
-            if (httpRequest == null)
-            {
-                throw new ArgumentNullException(nameof(httpRequest));
-            }
-
-            if (string.IsNullOrEmpty(id))
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
-
-            // Parse and validate the id to a CensusIdentifier.
-            this.censusIdentifier = ParseIdentifier(id);
-
-            FunctionRunContext functionRunContext = new FunctionRunContext();
-
-            if (this.censusIdentifier != null)
-            {
-                switch (httpRequest.Method)
-                {
-                    case "POST":
-                        toReturn = await this.ValidateAndRunAsync(
-                            httpRequest,
-                            functionRunContext,
-                            cancellationToken)
-                            .ConfigureAwait(false);
-                        break;
-
-                    case "GET":
-                        IHeaderDictionary headerDictionary =
-                            httpRequest.Headers;
-
-                        this.httpSpiExecutionContextManager.SetContext(
-                            headerDictionary);
-
-                        toReturn = await this.ProcessWellFormedRequestAsync(
-                            null,
-                            functionRunContext,
-                            cancellationToken)
-                            .ConfigureAwait(false);
-                        break;
-                }
-            }
-            else
-            {
-                toReturn =
-                    this.httpErrorBodyResultProvider.GetHttpErrorBodyResult(
-                        HttpStatusCode.BadRequest,
-                        3);
-            }
-
-            return toReturn;
+            return await this.ValidateAndRunAsync(httpRequest, null, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -173,136 +116,93 @@ namespace Dfe.Spi.IStoreAdapter.FunctionApp.Functions
         }
 
         /// <inheritdoc />
-        protected async override Task<IActionResult> ProcessWellFormedRequestAsync(
-            GetCensusRequest getCensusRequest,
-            FunctionRunContext functionRunContext,
+        protected override async Task<IActionResult> ProcessWellFormedRequestAsync(
+            GetCensusesRequest request, 
+            FunctionRunContext runContext, 
             CancellationToken cancellationToken)
         {
-            IActionResult toReturn = null;
-
-            if (getCensusRequest == null)
-            {
-                getCensusRequest = new GetCensusRequest();
-            }
-
-            getCensusRequest.CensusIdentifier = this.censusIdentifier;
-
             try
             {
-                GetCensusResponse getCensusResponse =
-                    await this.censusProcessor.GetCensusAsync(
-                        getCensusRequest,
-                        cancellationToken)
-                        .ConfigureAwait(false);
+                var response = await this.censusProcessor.GetCensusesAsync(
+                    request,
+                    cancellationToken);
+                
+                var jsonSerializerSettings = JsonConvert.DefaultSettings();
 
-                Census census = getCensusResponse.Census;
-
-                JsonSerializerSettings jsonSerializerSettings =
-                    JsonConvert.DefaultSettings();
-
-                if (jsonSerializerSettings == null)
-                {
-                    toReturn = new JsonResult(census);
-                }
-                else
-                {
-                    toReturn = new JsonResult(census, jsonSerializerSettings);
-                }
+                return jsonSerializerSettings == null 
+                    ? new JsonResult(response.Censuses) 
+                    : new JsonResult(response.Censuses, jsonSerializerSettings);
             }
             catch (DatasetQueryFileNotFoundException datasetQueryFileNotFoundException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.NotFound,
                     4,
                     datasetQueryFileNotFoundException);
             }
             catch (IncompleteDatasetQueryFileException incompleteDatasetQueryFileException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.ExpectationFailed,
                     5,
                     incompleteDatasetQueryFileException);
             }
             catch (TranslationApiAdapterException translationApiAdapterException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.FailedDependency,
                     6,
                     translationApiAdapterException);
             }
             catch (UnsupportedAggregateColumnRequestException unsupportedAggregateColumnRequestException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.BadRequest,
                     7,
                     unsupportedAggregateColumnRequestException);
             }
             catch (InvalidMappingTypeException invalidMappingTypeException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.ExpectationFailed,
                     8,
                     invalidMappingTypeException);
             }
             catch (SqlFieldValueUnboxingTypeException sqlFieldValueUnboxingTypeException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.ExpectationFailed,
                     9,
                     sqlFieldValueUnboxingTypeException);
             }
             catch (InvalidBetweenValueException invalidBetweenValueException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.BadRequest,
                     10,
                     invalidBetweenValueException);
             }
             catch (InvalidDateTimeFormatException invalidDateTimeFormatException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.BadRequest,
                     11,
                     invalidDateTimeFormatException);
             }
             catch (DataFilterValueUnboxingTypeException dataFilterValueUnboxingTypeException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.BadRequest,
                     12,
                     dataFilterValueUnboxingTypeException);
             }
             catch (UnsupportedSearchParameterException unsupportedSearchParameterException)
             {
-                toReturn = this.GetErrorBody(
+                return this.GetErrorBody(
                     HttpStatusCode.BadRequest,
                     13,
                     unsupportedSearchParameterException);
             }
-
-            return toReturn;
-        }
-
-        private static CensusIdentifier ParseIdentifier(
-            string censusIdentifierStr)
-        {
-            CensusIdentifier toReturn = null;
-
-            string[] identifierParts = censusIdentifierStr.Split(
-                '-',
-                StringSplitOptions.RemoveEmptyEntries);
-
-            if (identifierParts.Length == 3)
-            {
-                toReturn = new CensusIdentifier()
-                {
-                    DatasetQueryFileId = identifierParts[0],
-                    ParameterName = identifierParts[1],
-                    ParameterValue = identifierParts[2],
-                };
-            }
-
-            return toReturn;
         }
 
         private IActionResult GetErrorBody(

@@ -425,7 +425,23 @@
                         break;
 
                     case nameof(Boolean):
-                        toReturn = bool.Parse(value);
+
+                        // If coming from XML, parsable values will be in the
+                        // form of "0" or "1". bool.Parse doesn't deal with
+                        // these properly. So do a manual check.
+                        if (value == "0")
+                        {
+                            toReturn = false;
+                        }
+                        else if (value == "1")
+                        {
+                            toReturn = true;
+                        }
+                        else
+                        {
+                            toReturn = bool.Parse(value);
+                        }
+
                         break;
 
                     default:

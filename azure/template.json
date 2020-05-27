@@ -162,6 +162,10 @@
               "value": "dotnet"
             },
             {
+              "name": "WEBSITE_VNET_ROUTE_ALL",
+              "value": "1"
+            },
+            {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
               "value": "[reference(resourceId(variables('sharedResourceGroupName'), 'microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
             },
@@ -205,9 +209,31 @@
               "name": "SupportedSearchParameterNames",
               "value": "LearningProvider,LocalAuthorityNumber"
             }
+          ],
+          "ipSecurityRestrictions": [
+            {
+              "ipAddress": "[concat(parameters('eapimIp'), '/32')]",
+              "action": "Allow",
+              "name": "Allow EAPIM",
+              "priority": 1
+            }
           ]
         }
       },
+      "resources": [
+        {
+          "apiVersion": "2016-08-01",
+          "type": "Microsoft.Web/sites/networkConfig",
+          "name": "[concat(variables('functionAppName'), '/VirtualNetwork')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('functionAppName'))]"
+          ],
+          "properties": {
+            "subnetResourceId": "[variables('subnetId')]"
+          }
+        }
+      ],
       "tags": {
         "environment": "[parameters('environmentName')]",
         "app": "[parameters('appName')]"

@@ -210,14 +210,7 @@
               "value": "LearningProvider,LocalAuthorityNumber"
             }
           ],
-          "ipSecurityRestrictions": [
-            {
-              "ipAddress": "[concat(parameters('eapimIp'), '/32')]",
-              "action": "Allow",
-              "name": "Allow EAPIM",
-              "priority": 1
-            }
-          ]
+          "ipSecurityRestrictions": []
         }
       },
       "resources": [

@@ -54,6 +54,9 @@
           "aggregateType"
         ]
       }
+    },
+    "live": {
+      "type": "boolean"
     }
   },
   "required": [

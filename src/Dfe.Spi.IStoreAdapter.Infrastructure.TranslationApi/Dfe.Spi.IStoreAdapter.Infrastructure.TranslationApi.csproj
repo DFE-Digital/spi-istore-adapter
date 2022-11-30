@@ -10,7 +10,7 @@
     <PackageReference Include="Dfe.Spi.Common.Http.Client" Version="1.0.9" />
     
     <!-- Other -->
-    <PackageReference Include="RestSharp" Version="106.6.10" />
+    <PackageReference Include="RestSharp" Version="106.12.0" />
 
     <!-- Development/Non-Runtime -->
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="All" />

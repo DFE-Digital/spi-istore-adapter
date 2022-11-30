@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <DocumentationFile>Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage.xml</DocumentationFile>
+	  <TargetFramework>net6.0</TargetFramework>
+	  <DocumentationFile>Dfe.Spi.IStoreAdapter.Infrastructure.AzureStorage.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

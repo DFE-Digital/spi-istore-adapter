@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+	  <TargetFramework>net6.0</TargetFramework>
+	  <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <NeutralLanguage>en-GB</NeutralLanguage>
     <DocumentationFile>Dfe.Spi.IStoreAdapter.FunctionApp.xml</DocumentationFile>
   </PropertyGroup>
   
   <ItemGroup>
     <!-- Dfe.Spi.* -->
-    <PackageReference Include="Dfe.Spi.Common.Http.Server" Version="2.0.1" />
+    <PackageReference Include="Dfe.Spi.Common.Http.Server" Version="2.2.1" />
 
     <!-- Microsoft -->
-    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.AzureKeyVault" Version="2.1.1" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.29" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.1.3" />
 
     <!-- Development/Non-Runtime -->
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="All" />

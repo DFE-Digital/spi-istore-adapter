@@ -1,3 +1,6 @@
+pool:
+    vmImage: 'ubuntu-latest'
+
 trigger:
   batch: true
   branches:
@@ -13,9 +16,14 @@ variables:
 
 steps:
   - task: NuGetToolInstaller@1
-    displayName: 'Use NuGet 4.9.1'
+    displayName: 'Use NuGet 6.4.0'
     inputs:
-      versionSpec: '4.9.1'
+      versionSpec: '6.4.0'
+
+  - task: UseDotNet@2
+    displayName: 'Use dotnet 6'
+    inputs:
+     version: '6.0.x'
 
   - task: NuGetCommand@2
     displayName: 'Restore Public & Private NuGet Packages'
